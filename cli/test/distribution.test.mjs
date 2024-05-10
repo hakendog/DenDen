@@ -37,6 +37,7 @@ test("daily skill bundles a low-privilege CLI", async () => {
 
 test("setup skill bundles its management CLI and explicit install manifest", async () => {
   const setupRoot = join(root, "skills/denden-setup");
+  const skill = await readFile(join(setupRoot, "SKILL.md"), "utf8");
   const manifest = JSON.parse(await readFile(join(setupRoot, "install-manifest.json"), "utf8"));
   assert.equal(manifest.schemaVersion, 1);
   assert.equal(manifest.skill, "denden-setup");
@@ -49,6 +50,17 @@ test("setup skill bundles its management CLI and explicit install manifest", asy
     runtimeProtocol: "direct-fcm-v2",
     requiresAutomationToken: false,
   });
+  assert.match(skill, /Run `capabilities` before deciding that skill dependencies are missing/);
+  assert.match(skill, /Only if `capabilities` fails with `ERR_MODULE_NOT_FOUND` for `qrcode` or `pngjs`/);
+  assert.match(skill, /automatically run `npm ci[^`]+` in `scripts` without asking/);
+  assert.match(skill, /Installing Node\.js, npm, gcloud, or any other computer-level software[^.]+obtaining consent first/);
+  assert.doesNotMatch(skill, /If `scripts\/node_modules` is missing/);
+  const { stdout: helpStdout } = await execFileAsync(
+    process.execPath,
+    [join(setupRoot, "scripts/cli/bin/denden.mjs"), "setup", "--help"],
+    { cwd: root },
+  );
+  assert.match(JSON.parse(helpStdout).usage, /export\|import-plan\|import/);
 });
 
 test("DenDen distribution uses verified source instead of npm publication", async () => {
@@ -141,6 +153,8 @@ test("public docs and install bootstrap stay official, pinned, and registry-inde
   assert.match(guide, /current project only/);
   assert.match(guide, /temporarily for this task/);
   assert.match(guide, /Use that skill immediately/);
+  assert.match(guide, /install missing locked dependencies inside `scripts` automatically/);
+  assert.match(guide, /Installing Node\.js, npm, gcloud, or other computer-level software still requires the user's consent/);
   assert.match(guide, /remove only the temporary .*denden-setup.* skill directory/);
   assert.doesNotMatch(guide, /git clone|DenDen\.git|setup install/i);
   assert.match(setup, /scripts\/cli\/bin\/denden\.mjs/);
@@ -192,13 +206,14 @@ test("public docs and install bootstrap stay official, pinned, and registry-inde
   assert.match(senderKeyGuide, /\.denden\.json[\s\S]*\.config\/denden\/config\.json[\s\S]*service-account\.json/);
   assert.match(senderKeyGuide, /--channel-id[\s\S]*DENDEN_CHANNEL_ID[\s\S]*defaultChannelId/);
   assert.match(senderKeyGuide, /Firebase Messaging[\s\S]*短期存取權杖/);
-  assert.match(senderKeyGuide, /不包含任何電腦的 Google 發送金鑰/);
-  assert.match(deviceGuideZh, /## 新增或停用電腦[\s\S]*匯出一般通知設定[\s\S]*加密設定包[\s\S]*新電腦[\s\S]*Google 帳戶[\s\S]*測試通知/);
+  assert.match(senderKeyGuide, /未加密[\s\S]*共用 Google 發送私鑰[\s\S]*完整發送權限[\s\S]*不需要 Google 管理登入/);
+  assert.match(deviceGuideZh, /## 新增或停用電腦[\s\S]*匯出一般通知設定[\s\S]*未加密[\s\S]*不需要輸入密碼[\s\S]*不會要求 Google 登入[\s\S]*測試通知/);
+  assert.match(deviceGuideZh, /聊天[\s\S]*email[\s\S]*雲端同步[\s\S]*刪除兩台電腦上的轉移包副本/);
   assert.match(deviceGuideZh, /新電腦[\s\S]*安裝 DenDen 日常通知功能/);
   assert.ok(deviceGuideZh.includes(installGuideUrl));
   assert.match(deviceGuideEn, /## Add or disable a computer[\s\S]*new computer[\s\S]*install the daily DenDen notification feature/);
   assert.ok(deviceGuideEn.includes(installGuideUrl));
-  assert.match(senderKeyGuide, /## 讓另一台電腦發送通知[\s\S]*Windows、macOS 與 Linux[\s\S]*自己的發送身分與金鑰/);
+  assert.match(senderKeyGuide, /## 讓另一台電腦發送通知[\s\S]*Windows、macOS 與 Linux[\s\S]*匯入共用發送身分/);
   assert.match(senderKeyGuide, /Android 上的 Bixby 與 Tasker[\s\S]*同一支手機本機[\s\S]*不支援.*遠端發送端/);
   assert.match(indexZh, /DenDen 如何讀取設定與發送金鑰/);
   assert.match(indexEn, /How DenDen reads settings and sender keys/);

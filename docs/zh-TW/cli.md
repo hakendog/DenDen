@@ -89,10 +89,12 @@ denden setup --help
 - 初次設定：`management-auth`、`plan`、`direct`
 - 發送身分：`sender-auth-plan`、`sender-auth`、`sender-verify`、`sender-revoke-plan`、`sender-revoke`
 - 配對：`status`、`qr`、`qr-remove`、`rotate-plan`、`rotate`
-- 備份：`export sender|brand`、`import sender|brand`
+- 轉移與備份：`export sender|brand`、`import-plan sender`、`import sender|brand`
 - 外觀：`brand apply|resume|reset`
 - 日常技能：`skill-plan`、`skill-install`
 - 管理登入：`management-revoke-plan`、`management-revoke`
+
+一般發送轉移包未加密，包含共用 Google 發送私鑰；取得檔案即取得完整發送權限。匯入前必須執行 `import-plan sender`，再以 `--approved-digest <digest>` 執行 `import sender`。不同的現有設定預設拒絕覆寫；只有在共用發送身分已核准更換後，才加上 `--replace-existing true`。`brand` 備份仍使用密碼加密。
 
 會修改 Google、配對、憑證、技能或外觀的命令，都必須先由對應的規劃命令產生摘要，再使用相同的 `--approved-digest` 執行。不要自行產生摘要值。
 

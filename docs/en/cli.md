@@ -89,10 +89,12 @@ Public subcommands:
 - Initial setup: `management-auth`, `plan`, `direct`
 - Sender identities: `sender-auth-plan`, `sender-auth`, `sender-verify`, `sender-revoke-plan`, `sender-revoke`
 - Pairing: `status`, `qr`, `qr-remove`, `rotate-plan`, `rotate`
-- Backups: `export sender|brand`, `import sender|brand`
+- Transfers and backups: `export sender|brand`, `import-plan sender`, `import sender|brand`
 - Appearance: `brand apply|resume|reset`
 - Daily skill: `skill-plan`, `skill-install`
 - Administrative sign-in: `management-revoke-plan`, `management-revoke`
+
+The general sender transfer package is unencrypted and contains the shared Google sender private key; possession grants full sender authority. Run `import-plan sender` before every import, then run `import sender` with its `--approved-digest <digest>`. Different existing settings are not overwritten by default; add `--replace-existing true` only after an approved shared-sender rotation. `brand` backups remain password-encrypted.
 
 Commands that change Google resources, pairing, credentials, skills, or appearance require a summary from the matching planning command. Run them with the same `--approved-digest`. Do not generate a digest yourself.
 

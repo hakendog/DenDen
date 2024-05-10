@@ -47,7 +47,7 @@ The user settings contain only the location of the sender key directory. The key
 
 DenDen first confirms that only the current computer user can read the directory and file. It then checks that the key belongs to the Google project named in the user settings. It stops when the project does not match, the file format is invalid, or file permissions are too broad.
 
-Windows limits file access to the current user. macOS and Linux check permissions on the private directory and file. Each sender computer has its own key. Do not copy one from another computer.
+Windows limits file access to the current user. macOS and Linux check permissions on the private directory and file. All sender computers share one least-privilege key, but it may move only inside DenDen's sender transfer package. Do not copy the raw key or private directory.
 
 ## What happens when DenDen sends a notification
 
@@ -63,11 +63,11 @@ Google accepting the request only means that FCM accepted the message. It does n
 
 ## Let another computer send notifications
 
-Remote sending currently supports Windows, macOS, and Linux. A new computer cannot reuse another computer's `service-account.json`. The setup assistant creates a separate sender identity and key for it.
+Remote sending currently supports Windows, macOS, and Linux. A new computer imports the shared sender identity through the setup assistant without another Google sign-in.
 
-First export a password-protected general settings package from a configured computer, then import it on the new computer. This package contains Google project identifiers, the private message channel, and the notification encryption key. It does not contain a Google sender key from any computer.
+First export an unencrypted general sender transfer package from a configured computer, then move it to the new computer through a user-controlled local medium. It contains Google project identifiers, the private message channel, the notification encryption key, and the shared Google sender private key. It does not contain the DenDen appearance key. Possession grants full sender authority.
 
-After the import, the setup assistant asks you to sign in with the Google account that manages DenDen. Once you approve the summary, it creates a separate sender identity, saves the new key locally, confirms that it can send only FCM messages, and removes the administrative sign-in. The new computer sends a test notification, which you confirm on the phone.
+After the import, the setup assistant writes the shared private key to the new computer's protected directory, confirms that it can send only FCM messages, and sends a test notification for you to confirm on the phone. No Google administrative sign-in is required.
 
 See [Add or disable a computer](device-management.md#add-or-disable-a-computer) for complete steps.
 
@@ -75,6 +75,6 @@ Bixby and Tasker on Android create DenDen messages only on the same phone. Anoth
 
 ## Disable or replace a computer
 
-If a computer is lost or retired, you can disable only its sender identity without affecting other computers or phones. If pairing information or the notification encryption key leaked, replace the entire pairing and pair every phone you keep again.
+For a computer you still control, remove its private DenDen settings and daily skill. A single computer cannot be revoked remotely. If a computer is lost or untrusted, rotate the shared Google sender key and re-import it on every retained computer. Because the computer also stores pairing information and the notification encryption key, replace the entire pairing and pair every retained phone again.
 
 See the [CLI reference](cli.md) for commands and setting formats. See [Add and manage devices](device-management.md) for normal operations.

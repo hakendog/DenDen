@@ -49,7 +49,7 @@ Bixby and Tasker can create DenDen messages directly. They do not require an AI 
 
 ## Add a sending device (computer)
 
-To send DenDen notifications from another computer, ask the AI assistant on a working computer to export encrypted settings, then move that package to the new computer. The setup assistant creates separate sender permission for the new computer instead of sharing the old computer's private files.
+To send DenDen notifications from another computer, ask the AI assistant on a working computer to export an unencrypted transfer package, then move it to the new computer through a user-controlled local medium. The package contains the shared least-privilege sender key, so the new computer does not need another Google sign-in. Possession grants full sender authority.
 
 Confirm that your phone receives a test notification from the new computer. See [Add or disable a computer](device-management.md#add-or-disable-a-computer) for the complete procedure.
 

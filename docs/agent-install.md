@@ -45,6 +45,8 @@ This page installs only the `denden-setup` skill. Use that skill immediately aft
    - `references/denden-generation.md`: image-generation rules.
    - `scripts/`: the setup CLI, locked dependencies, and optional daily `denden` skill.
 
+   When Node.js and npm are already available, let `denden-setup` install missing locked dependencies inside `scripts` automatically. Installing Node.js, npm, gcloud, or other computer-level software still requires the user's consent.
+
 5. Create `scripts/source.json`:
 
    ```json

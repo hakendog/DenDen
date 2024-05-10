@@ -215,7 +215,7 @@ async function runFirstSetupLocked(options, paths, context) {
     await saveStage("firebase-configured", sanitizePhaseResult(result), projectNumber ? { projectNumber } : {});
   }
   if (needs("sender-authorized")) {
-    reportProgress(context, "建立此電腦的最低權限發送身分");
+    reportProgress(context, "建立 DenDen 共用的最低權限發送身分");
     const result = await (context.senderAuth || runSenderAuthCommand)([
       ...senderOperationArgs(options, approval.sender.senderAccountId),
       "--approved-digest", digest(approval.sender),
@@ -316,7 +316,7 @@ export async function runSenderAuthCommand(argv, context = {}) {
     serviceAccountEmail: approval.serviceAccountEmail,
     senderCredentialsDirectory: paths.senderCredentialsDirectory,
     permissions: approval.permissions,
-    note: "日常工具以本機受保護的專用服務帳戶金鑰取得短效 FCM 權杖；不使用人類 Google 憑證",
+    note: "日常工具以本機受保護的共用服務帳戶金鑰取得短效 FCM 權杖；不使用人類 Google 憑證",
   };
 }
 
@@ -408,7 +408,7 @@ export async function runSenderRevokeCommand(argv, context = {}) {
     serviceAccountEmail: approval.serviceAccountEmail,
     senderCredentialsDirectory: paths.senderCredentialsDirectory,
     localCacheRemoved: true,
-    note: "已刪除此電腦的專用發送服務帳戶與本機金鑰；通知金鑰未旋轉，疑似外洩時仍須旋轉整組配對",
+    note: "已刪除所有發送電腦共用的服務帳戶與此電腦的本機金鑰；其他電腦將停止發送，疑似配對資料外洩時仍須旋轉整組配對",
   };
 }
 
@@ -911,7 +911,7 @@ function senderServiceAccountApprovalValue({ projectId, accountId, managementAcc
     managementAccount,
     senderCredentialsDirectory,
     keyFile: join(senderCredentialsDirectory, SENDER_SERVICE_ACCOUNT_FILE),
-    effect: "建立此電腦專用的低權限服務帳戶、綁定 FCM 發送角色，並在本機受保護目錄保存一把可撤銷的長效私鑰",
+    effect: "建立 DenDen 共用的低權限服務帳戶、綁定 FCM 發送角色，並在本機受保護目錄保存一把可透過受保護轉移包移轉的長效私鑰",
   };
   return { ...value, approvalDigest: digest(value) };
 }
@@ -936,7 +936,7 @@ async function senderServiceAccountRevokeApproval(options, context) {
     permissions: SENDER_PERMISSIONS,
     managementAccount: accounts[0],
     senderCredentialsDirectory: paths.senderCredentialsDirectory,
-    effect: "刪除此電腦專用的發送服務帳戶及全部遠端金鑰，再刪除本機私鑰；不旋轉通知金鑰或影響其他發送端",
+    effect: "刪除所有發送電腦共用的服務帳戶及全部遠端金鑰，再刪除此電腦的本機私鑰；其他電腦將立即失去發送權限",
   };
   return { ...value, approvalDigest: digest(value) };
 }
@@ -997,7 +997,7 @@ async function ensureSenderServiceAccountKey(runner, approval, directory, env, c
       "--format=json",
     ], { env })).stdout || "[]");
     if (Array.isArray(keys) && keys.length) {
-      throw new Error("專用發送服務帳戶已有無法在本機驗證的遠端私鑰；停止建立另一把金鑰");
+      throw new Error("共用發送服務帳戶已有無法在本機驗證的遠端私鑰；停止建立另一把金鑰");
     }
     await runner("gcloud", [
       "iam", "service-accounts", "keys", "create", pendingPath,

@@ -28,7 +28,7 @@ Make sure those phones are available before you begin. The setup assistant sends
 
 ## Add or disable a computer
 
-Every computer that sends DenDen notifications has its own permission. Do not copy another computer's private settings directory.
+All sender computers share one least-privilege Google sender identity. Transfer it only with DenDen's sender transfer package. Do not copy the raw key or private settings directory.
 
 ### Let another computer send notifications
 
@@ -42,22 +42,22 @@ https://raw.githubusercontent.com/hakendog/DenDen/26a9298d199d4c65b547288d36166a
 
 Then follow these steps:
 
-1. Choose where to save the encrypted settings package.
-2. Enter a backup password in the private computer prompt. The AI assistant does not see it.
-3. Move the encrypted settings package to the new computer. Do not copy the private settings directory or sender key with it.
+1. Choose where to save the transfer package. It is unencrypted and readable only by the current user.
+2. Move it to the new computer through a user-controlled local medium. Do not use chat, email, cloud sync, or another untrusted channel.
+3. The package contains the shared Google sender private key, private notification channel, and notification encryption key. Possession grants full sender authority.
 4. Open an AI assistant on the new computer and paste the entire block below:
 
    ```text
-   Please follow this DenDen installation guide to load the setup assistant. Then import my general notification settings, create separate sender permission for this computer, and install the daily DenDen notification feature:
+   Please follow this DenDen installation guide to load the setup assistant. Then import my general notification settings, verify the shared sender permission, and install the daily DenDen notification feature:
 
    https://raw.githubusercontent.com/hakendog/DenDen/26a9298d199d4c65b547288d36166a628d80b628/docs/agent-install.md
    ```
 
-5. Choose the encrypted settings package and enter its password yourself.
-6. When the browser opens, sign in with the Google account that manages DenDen.
-7. Choose a daily notification policy and confirm the installation location.
-8. Review the summary for the new computer and daily notification feature. Reply `I approve` when it is correct.
-9. The setup assistant creates separate sender permission and a key for this computer, installs the daily notification feature, removes the Google administrative access used for setup, and sends a test notification.
+5. Choose the transfer package. No password is required.
+6. Review the import project, paths, fingerprints, replacement status, and effect, then approve only if they are correct.
+7. The setup assistant writes the shared key to a protected directory and verifies its least privilege without asking for a Google sign-in.
+8. Choose a daily notification policy, confirm the installation location, install the daily notification feature, and send a test notification.
+9. After a successful import, decide whether to delete the transfer-package copies on both computers. Ordinary deletion may leave recoverable storage traces.
 
 Even when the setup assistant reports that it sent the test, confirm that the notification actually appears on your phone. Existing computers and phones do not need to pair again.
 
@@ -65,6 +65,6 @@ Remote sending currently supports Windows, macOS, and Linux computers. Bixby and
 
 ### Disable a computer
 
-You can disable a computer that is lost, retired, or no longer used. This removes only that computer's permission and does not affect other computers or phones.
+For a computer you still control, remove its private DenDen settings and daily skill. No Google sign-in is required.
 
-If the entire pairing may have leaked, not just one computer's permission, use "Replace all pairing information" instead.
+A single computer cannot be revoked remotely. If a computer or transfer package is lost or untrusted, sign in with the Google account that manages DenDen on a retained computer, rotate the shared sender identity, and import the new package on every retained computer. Because a lost computer also stores pairing information, use "Replace all pairing information" as well.

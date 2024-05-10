@@ -8,7 +8,7 @@ You do not register a DenDen account, and the maintainers do not operate a centr
 
 Received messages, read states, archived content, Trash, pairing information, and personal settings stay on the phone. Android cloud backup and device transfer are disabled for DenDen, so the app does not send this data to Android backup services.
 
-DenDen settings and sender keys on a computer stay on that computer and are not uploaded to the maintainers. Each computer has its own sender key, and settings backups do not contain that key.
+DenDen settings and sender keys are not uploaded to the maintainers. All sender computers share one least-privilege key, transferred inside an unencrypted package initially readable only by the current user.
 
 DenDen has no central synchronization service. Each phone keeps its own received content and read states. They do not sync to other phones.
 
@@ -22,7 +22,7 @@ DenDen encrypts the notification title and message text on the computer before s
 
 A DenDen pairing code contains secrets needed to join your private message channel. Do not capture, forward, paste into a conversation, or upload it to another service.
 
-Each sender computer has its own permission, limited to sending DenDen notifications. Do not copy settings from an old computer when adding another one. If a computer is lost or retired, or a DenDen pairing code may have leaked, follow [Add and manage devices](device-management.md) to disable that computer or replace the entire pairing.
+The shared sender permission is limited to sending DenDen notifications. The transfer package grants full sender authority; do not move it through chat, email, cloud sync, or another untrusted channel, and do not copy the raw key or settings directory. If a package or computer is lost, rotate the shared sender key. If pairing information may also have leaked, replace the entire pairing.
 
 ## Updates and data removal
 

@@ -336,7 +336,7 @@ test("sender authorization creates one approval-bound low-privilege service acco
   }
 });
 
-test("sender revocation deletes only this computer service account and local key directory", async () => {
+test("shared sender revocation warns that every sender loses authorization", async () => {
   const fixture = await pairingFixture();
   const calls = [];
   const removed = [];
@@ -373,6 +373,7 @@ test("sender revocation deletes only this computer service account and local key
       "--management-config-dir", join(fixture.root, "management"),
     ];
     const plan = await runSenderRevokePlanCommand(args, { runner });
+    assert.match(plan.effect, /所有發送電腦[\s\S]*立即失去發送權限/);
     await assert.rejects(runSenderRevokeCommand(args, { runner }), /尚未取得明確同意/);
     await assert.rejects(runSenderRevokeCommand([...args, "--approved-digest", plan.approvalDigest], {
       runner,
@@ -383,6 +384,7 @@ test("sender revocation deletes only this computer service account and local key
       removeDirectory: async (path, options) => removed.push({ path, options }),
     });
     assert.equal(resumed.reused, true);
+    assert.match(resumed.note, /其他電腦將停止發送/);
     assert.ok(calls.some((call) => call.commandArgs[0] === "iam" && call.commandArgs[2] === "delete" && call.commandArgs.includes(accountEmail)));
     assert.equal(calls.some((call) => call.commandArgs.includes("application-default")), false);
     assert.equal(removed[0].path, join(fixture.root, "sender"));

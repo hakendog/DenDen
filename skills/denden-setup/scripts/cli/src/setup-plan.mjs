@@ -43,7 +43,7 @@ export function buildDirectSetupApproval({
     excluded: [
       "不連結帳務",
       "不啟用 Analytics、Firestore、Functions、Hosting、Storage、Budget 或 Secret Manager",
-      "初次 Firebase 建立階段不建立服務帳戶金鑰；後續另經核准，只建立每台發送電腦專用的最低權限金鑰",
+      "初次 Firebase 建立階段不建立服務帳戶金鑰；後續另經核准，只建立一把可透過受保護轉移包共用的最低權限金鑰",
       "不安裝或使用 Firebase CLI",
     ],
   };

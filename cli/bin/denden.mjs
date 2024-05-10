@@ -53,6 +53,7 @@ async function main() {
   if (argv[0] === "setup" && argv[1] === "qr-remove") return lockedSetup(argv.slice(2), runRemoveQrCommand);
   if (argv[0] === "setup" && argv[1] === "rotate-plan") return runRotatePlanCommand(argv.slice(2));
   if (argv[0] === "setup" && argv[1] === "rotate") return lockedSetup(argv.slice(2), runRotatePairingCommand);
+  if (argv[0] === "setup" && argv[1] === "import-plan") return runPortableConfigCommand(argv.slice(1));
   if (argv[0] === "setup" && ["export", "import"].includes(argv[1])) return lockedSetup(argv.slice(1), runPortableConfigCommand);
   if (argv[0] === "setup" && argv[1] === "skill-plan") return runDailySkillPlanCommand(argv.slice(2));
   if (argv[0] === "setup" && argv[1] === "skill-install") return runDailySkillInstallCommand(argv.slice(2));
@@ -74,7 +75,7 @@ function lockedSetup(args, command) {
 
 function setupHelp() {
   return {
-    usage: "denden setup <install|rollback|doctor|management-auth|plan|direct|sender-auth-plan|sender-auth|sender-verify|sender-revoke-plan|sender-revoke|status|qr|qr-remove|rotate-plan|rotate|export|import|brand|skill-plan|skill-install|management-revoke-plan|management-revoke>",
+    usage: "denden setup <install|rollback|doctor|management-auth|plan|direct|sender-auth-plan|sender-auth|sender-verify|sender-revoke-plan|sender-revoke|status|qr|qr-remove|rotate-plan|rotate|export|import-plan|import|brand|skill-plan|skill-install|management-revoke-plan|management-revoke>",
     note: "先以 plan 選定日常技能目的地並顯示完整初次設定摘要；direct 使用同一 digest 完成 Firebase、最低權限發送身分、驗證、管理登入撤銷與技能安裝。",
   };
 }

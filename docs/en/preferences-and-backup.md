@@ -28,16 +28,16 @@ Before using an external image service, the setup assistant explains what it nee
 
 ## Export or import settings
 
-The setup assistant handles two kinds of encrypted backup:
+The setup assistant handles two kinds of portable data:
 
-1. General notification settings for restoring basic DenDen settings.
-2. DenDen image management settings for updating or restoring the image.
+1. An unencrypted general sender transfer package that gives another trusted computer full sender authority.
+2. A password-encrypted DenDen image-management backup for updating or restoring the image.
 
-When exporting, enter a backup password directly in the computer prompt. Enter it there again when importing. The AI assistant does not see the password.
+The general sender transfer package does not use a password. It is initially readable only by the current user, but moving or copying it may change those permissions. Do not use chat, email, cloud sync, or another untrusted channel. The DenDen image-management backup still requires a password of at least 12 characters entered in the computer prompt; the AI assistant does not see it.
 
-A general settings backup does not include the notification permission unique to each computer. A new computer still needs its own permission after importing the backup. The backup also excludes notification content received by the phone.
+The general sender transfer package contains the shared least-privilege Google sender private key, private notification channel, and notification encryption key, so a new computer does not require another Google sign-in after import. Possession grants full sender authority. It does not contain the DenDen image-management key or notification history from the phone.
 
-Before importing, the setup assistant explains which content will be added or replaced. It writes the settings only after you approve.
+Before importing, the setup assistant explains which content will be added or replaced. It writes the settings only after you approve, then separately asks whether to delete the transfer-package copy.
 
 ## Update DenDen
 
