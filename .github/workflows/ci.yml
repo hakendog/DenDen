@@ -48,14 +48,14 @@ jobs:
       - if: github.repository == 'hakendog/DenDen'
         run: npm run verify:public
       - run: npm run verify:docs
-      - run: git diff --check "$(git hash-object -t tree /dev/null)" HEAD
+      - run: git diff --check HEAD^ HEAD
       - run: |
           chmod +x gradlew
           ./gradlew test assembleDebug lint --no-daemon
       - name: Run Android instrumentation tests
         run: |
-          sdkmanager "platform-tools" "emulator" "system-images;android-35;google_apis;x86_64"
-          echo no | avdmanager create avd --force --name denden-ci --package "system-images;android-35;google_apis;x86_64"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "emulator" "system-images;android-35;google_apis;x86_64"
+          echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --force --name denden-ci --package "system-images;android-35;google_apis;x86_64"
           sudo chmod 666 /dev/kvm
           "$ANDROID_HOME/emulator/emulator" -avd denden-ci -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect &
           timeout 300 adb wait-for-device
