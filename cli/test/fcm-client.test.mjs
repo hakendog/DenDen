@@ -28,7 +28,7 @@ test("direct FCM event is encrypted, bounded, and uses topic data message policy
   });
   assert.equal(built.request.message.topic, config.topic);
   assert.equal(Object.hasOwn(built.request.message, "token"), false);
-  assert.deepEqual(built.request.message.android, { priority: "HIGH", ttl: "60s" });
+  assert.deepEqual(built.request.message.android, { priority: "HIGH", ttl: "0s" });
   assert.ok(built.dataBytes <= 2048);
   const plaintext = decryptDirectFcmPayload(built.request.message.data, config.eventKey);
   assert.equal(plaintext.mode, "ring");

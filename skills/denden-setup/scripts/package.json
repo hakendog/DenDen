@@ -2,7 +2,28 @@
   "name": "@tensal/denden",
   "version": "1.0.0",
   "private": true,
+  "description": "Agent-first Android pager with bring-your-own Firebase",
   "type": "module",
+  "bin": {
+    "denden": "cli/bin/denden.mjs"
+  },
+  "files": [
+    "cli/",
+    "integrations/",
+    "skills/denden/",
+    "skills/denden-setup/",
+    "docs/agent-install.md"
+  ],
+  "scripts": {
+    "test": "node --test \"cli/test/**/*.test.mjs\"",
+    "test:cli": "node --test \"cli/test/**/*.test.mjs\"",
+    "verify:repository": "node scripts/check-repository.mjs",
+    "verify:public": "node scripts/check-public-repository.mjs",
+    "verify:docs": "node scripts/check-docs.mjs",
+    "verify:apk": "node scripts/check-debug-apk.mjs",
+    "check:denden-skill": "node scripts/sync-denden-skill.mjs --check",
+    "sync:denden-skill": "node scripts/sync-denden-skill.mjs --write"
+  },
   "dependencies": {
     "pngjs": "5.0.0",
     "qrcode": "1.5.4"

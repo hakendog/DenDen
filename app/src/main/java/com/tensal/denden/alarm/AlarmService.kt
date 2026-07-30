@@ -42,6 +42,7 @@ class AlarmService : Service() {
     private var activeStartId: Int? = null
     private var latestStartId: Int = 0
     private var pendingStartJob: Job? = null
+    private val queuedStarts = ArrayDeque<Pair<Intent, Int>>()
     private val eventRepo: EventRepository by lazy {
         EventRepository(EventDatabase.getInstance(applicationContext).eventDao())
     }
@@ -125,10 +126,21 @@ class AlarmService : Service() {
         }
         val ringUntilMillis = intent.getLongExtra("ringUntilMillis", -1L).takeIf { it > 0 }
         if (isRingExpired(ringUntilMillis, System.currentTimeMillis())) {
-            stopSelf()
+            serviceScope.launch(start = CoroutineStart.UNDISPATCHED) {
+                withContext(Dispatchers.IO) {
+                    EventDatabase.getInstance(applicationContext).directMessageDao()
+                        .finishAlert(eventId, "expired", System.currentTimeMillis(), "expired")
+                }
+                if (registry.eventId == null) continueQueuedAlarmOrStop(startId)
+            }
             return START_NOT_STICKY
         }
-        if (!registry.start(eventId)) return START_NOT_STICKY
+        if (!registry.start(eventId)) {
+            if (registry.eventId != eventId && queuedStarts.none { it.first.getStringExtra(EXTRA_EVENT_ID) == eventId }) {
+                queuedStarts.addLast(Intent(intent) to startId)
+            }
+            return START_NOT_STICKY
+        }
 
         val title = intent.getStringExtra("title") ?: "DenDen"
         val message = intent.getStringExtra("message") ?: ""
@@ -175,14 +187,21 @@ class AlarmService : Service() {
                 false
             }
             pendingStartJob = null
-            if (!activated && registry.eventId == eventId) {
+            if (activated) {
+                withContext(Dispatchers.IO) {
+                    EventDatabase.getInstance(applicationContext).directMessageDao()
+                        .finishAlert(eventId, "executed", System.currentTimeMillis(), null)
+                }
+            } else if (registry.eventId == eventId) {
+                withContext(Dispatchers.IO) {
+                    EventDatabase.getInstance(applicationContext).directMessageDao()
+                        .finishAlert(eventId, "degraded", System.currentTimeMillis(), "activation_failed")
+                }
                 AlarmRuntime.markTerminal(eventId, "activation_failed")
                 registry.stop(eventId)
                 activeEvent = null
                 activeStartId = null
-                @Suppress("DEPRECATION")
-                stopForeground(true)
-                stopSelf(latestStartId)
+                continueQueuedAlarmOrStop(startId)
             }
         }
         return START_NOT_STICKY
@@ -217,17 +236,19 @@ class AlarmService : Service() {
                 // Audio is already stopped; local readiness evidence exposes persistence failure.
             }
             if (openChannelsAfter) startActivity(channelsActivityIntent())
-            if (registry.eventId == null) {
-                @Suppress("DEPRECATION")
-                stopForeground(true)
-            }
-            val cleanupStartId = if (registry.eventId == null) {
-                maxOf(startId ?: 0, latestStartId)
-            } else {
-                startId ?: 0
-            }
-            if (cleanupStartId > 0) stopSelf(cleanupStartId) else stopSelf()
+            if (registry.eventId == null) continueQueuedAlarmOrStop(startId)
         }
+    }
+
+    private fun continueQueuedAlarmOrStop(startId: Int?) {
+        queuedStarts.removeFirstOrNull()?.let { (intent, queuedStartId) ->
+            onStartCommand(intent, 0, queuedStartId)
+            return
+        }
+        @Suppress("DEPRECATION")
+        stopForeground(true)
+        val cleanupStartId = maxOf(startId ?: 0, latestStartId)
+        if (cleanupStartId > 0) stopSelf(cleanupStartId) else stopSelf()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

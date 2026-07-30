@@ -1,87 +1,85 @@
-# DenDen 圖片生成契約
+# DenDen image-generation contract
 
-選擇生成新的 DenDen、依條件生成、重生成或測試生成時，先完整讀完本文件。這是唯一生成契約；使用者的明確條件可補充軟性設計方向，但不得放寬姿態、眼睛、結構、安全或可見張數限制。
+Read this entire file before generating, regenerating, or testing a DenDen image. It is the only generation contract. User requirements may add soft direction but cannot relax pose, eye, anatomy, safety, or visible-image limits.
 
-## 五階段流程
+## Five-stage process
 
-1. **抽取設計軸**
-   - 三個家族等機率選一個。
-   - 配件／裝飾抽一或兩項，權重為 `1:2 = 1:2`，不產生零裝飾候選。
-   - 單張候選抽零至兩種動態輔助效果；速度線只是候選之一，不是必備。
-2. **創意發想**
-   - Agent 在內部提出三份彼此不同的完整概念，不把主題、裝飾或配色交給圖片模型隨機補完。
-   - 排除只換色、重複上一候選、只靠最常見物件，或只靠無關怪趣物件成立的概念。
-3. **篩選與定稿**
-   - 從合格概念隨機選一份，完成下方設計卡；除非使用者要求，不展示落選概念。
-4. **編譯提示詞**
-   - 只輸出 `HARD CONSTRAINTS`、`FINALIZED DESIGN`、`STYLE` 三段；不得附上發想過程，也不得列出長串與定稿無關的禁止物件。
-5. **生成與自檢**
-   - 每次圖片服務呼叫只產生一張可見圖。依「生成後自檢」判定是否可交付；硬性失敗才沿用同一定稿做針對性重生，不重新抽題。
+1. **Choose design axes**
+   - Choose one of the three families with equal probability.
+   - Choose one or two named accessories/decorations, weighted 1:2 as 1:2. Never generate a zero-decoration candidate.
+   - Choose zero to two named motion effects. Speed lines are optional.
+2. **Develop concepts**
+   - Internally create three distinct complete concepts. Do not leave theme, decoration, or palette for the image model to invent.
+   - Reject color-only variants, repeats of the previous candidate, and concepts relying only on a cliché or unrelated novelty object.
+3. **Select and finalize**
+   - Randomly select one valid concept and complete the design card below. Do not show rejected concepts unless requested.
+4. **Compile the prompt**
+   - Output only `HARD CONSTRAINTS`, `FINALIZED DESIGN`, and `STYLE`. Do not expose brainstorming or unrelated negative lists.
+5. **Generate and inspect**
+   - Each image-service call produces exactly one visible image. Regenerate the same finalized design only for a hard failure; do not choose a new theme.
 
-## 結構與姿態
+## Anatomy and pose
 
-- 唯一傳給圖片服務的參考資產是技能根目錄下的 `assets/denden-generation-mask.png`；不得上傳既有 DenDen 完成品。
-- 遮罩固定整體外輪廓、左側大圓殼、右側僅略微抬起且仍向前延伸的頭部、低而連續的身體、近水平低伏的腹足與尾巴、殼／頭比例及兩根觸角位置。不要求逐像素貼合，可微調局部曲線、表情與貼身配件。
-- 動勢只能由低伏橫向身體、水平前傾、尾端拉伸或輕彎、後掠／不對稱觸角、構圖與動態輔助效果表現。不得新增手腳、額外凸起物、垂直長頸、直立、坐起、站起或讓前半身高聳在殼旁。
-- 保留可辨識的蝸牛、殼旋紋、兩根觸角，以及固定在臉上的一對、共兩顆眼睛；不得增加眼睛狀記號。
-- 觸角末端永遠不是眼睛，不得有瞳孔、虹膜、眼白、黑色中心或環狀眼睛結構。可有與身體材質一致的單純高光，但不得讀成眼睛。
+- The only reference sent to an image service is `assets/denden-generation-mask.png`. Never upload a finished DenDen image.
+- Preserve the mask's overall silhouette: large round shell on the left; head extending forward on the right with only a slight lift; low continuous body; nearly horizontal foot and tail; shell/head proportions; and two tentacle positions. Local curves, expression, and fitted accessories may vary.
+- Motion comes from a low horizontal body, forward lean, stretched or lightly curved tail, swept/asymmetric tentacles, composition, and optional effects. Never add limbs, extra protrusions, a long upright neck, standing, sitting, or a raised front half.
+- Keep a recognizable snail, shell spiral, exactly two tentacles, and exactly two eyes on the face.
+- Tentacle tips are never eyes: no pupils, irises, sclera, dark centers, or eye-like rings. A simple material highlight is allowed only when it cannot read as an eye.
 
-## 三個家族
+## Families
 
-1. **可愛快遞員**：低伏向前滑行、貼地加速或尾端輕彎推進；親切、圓潤、可愛可靠，帶有傳遞好消息的感覺。
-2. **渦輪特務**：三者速度感最強；低伏流線前傾、後掠觸角或雷達／渦輪節奏。送件與通訊物件只是隨機選項，不固定郵差包或信封；帥氣俐落且不使用武器。
-3. **搗蛋訊號**：貼地急煞、甩尾、水平傾斜或不對稱觸角；有趣、淘氣、出其不意但不令人不安。
+1. **Cute Courier** — friendly, rounded, reliable, moving low and forward with a feeling of delivering good news.
+2. **Turbo Agent** — strongest sense of speed, streamlined low lean, swept tentacles, radar/turbo rhythm; sharp and cool, never armed. Delivery/communication props are optional.
+3. **Mischief Signal** — low skid, tail swing, horizontal tilt, or asymmetric tentacles; playful and surprising, never disturbing.
 
-家族只定義性格、動態語氣與速度強度，不固定配色、表情、殼內圖樣或配件。三者都必須靠低伏橫向構圖呈現清楚動態感。
+Families define character and motion intensity, not fixed colors, expressions, shell patterns, or accessories.
 
-## 隨機設計規則
+## Random design rules
 
-- 配件／裝飾沒有預設清單，也不綁定家族。每項必須具名，可穿戴、攜帶、繫掛、貼附、嵌入殼面或成為殼紋，不必全部整合進殼體；必須與蝸牛合理互動並服務單一主題。
-- 排除遮住眼睛、觸角或殼旋紋、改變蝸牛 anatomy，或與主題無關而只為笑梗存在的物件；使用者明確指定時仍不能違反硬性結構限制。
-- 基本殼旋紋、非語意性色塊、表情、觸角姿態、配色、明暗與動態輔助效果不計入裝飾數；額外可辨識的殼徽、符號或語意圖樣要計入。
-- 動態輔助效果的形式完全開放且逐項具名。抽到零種時，仍須由身體走向、觸角姿態與構圖呈現動勢。
-- 比較兩張以上時採分層隨機：分派不同動態語彙，至少一張有速度線，另至少一張使用非速度線效果或零種效果；不得讓整批意外相同。
+- Accessories/decorations have no fixed list or family binding. Name each item, position, interaction, and thematic purpose. It may be worn, carried, attached, embedded, or used as a shell motif.
+- Reject anything that hides eyes, tentacles, or the shell spiral; changes anatomy; or exists only as an unrelated joke. Explicit user requests still cannot break hard anatomy rules.
+- The base spiral, nonsemantic color blocks, expression, tentacle pose, palette, lighting, and motion effects do not count as decorations. A recognizable emblem or semantic shell mark does.
+- Name every motion effect and its location. Zero effects is valid when the pose and composition still convey motion.
+- When comparing multiple images, assign different motion vocabularies: at least one uses speed lines, and at least one uses a non-speed-line effect or no effect.
 
-## 定稿設計卡
+## Finalized design card
 
-呼叫圖片模型前必須具體填完：
+Complete every field before calling the image model:
 
-- 家族與單一主題。
-- 一或兩項配件／裝飾的名稱、位置、互動方式與主題作用。
-- 三至五個高對比主色及各自用途；不綁定家族，也不刻意重現舊三家族色盤。
-- 臉上兩顆眼睛的造型、表情，以及兩根觸角的姿態與非眼睛末端。
-- 殼面處理與殼旋紋。
-- 零至兩種動態輔助效果的精確數量、名稱與位置。
+- Family and one theme.
+- One or two accessories/decorations: names, positions, interactions, and purpose.
+- Three to five high-contrast main colors and their uses.
+- Two facial eyes, expression, and two tentacle poses with non-eye tips.
+- Shell treatment and spiral.
+- Exact count (zero to two), names, and locations of motion effects.
 
-任何欄位都不得留給圖片模型自行決定。
-
-## 最終提示詞格式
+## Final prompt format
 
 ```text
 HARD CONSTRAINTS
-只把中性遮罩當作結構基準；維持低伏橫向姿態、殼／頭比例與近水平腹足。固定兩根觸角，且只有臉上的兩顆眼睛；觸角末端不是眼睛。嚴格遵守定稿的裝飾與動態效果數量。不得新增手腳、額外凸起物、直立、坐起、長頸、文字、浮水印、第三方角色、武器或 3D 造型。
+Use the neutral mask only as the structural reference. Preserve the low horizontal pose, shell/head ratio, and nearly horizontal foot. Keep exactly two tentacles and exactly two eyes on the face; tentacle tips are not eyes. Follow the finalized decoration and motion-effect counts exactly. No limbs, extra protrusions, standing, sitting, long neck, text, watermark, third-party character, weapon, or 3D rendering.
 
 FINALIZED DESIGN
-填入完整定稿設計卡，只寫本次實際選中的家族、主題、配件、配色、臉部、觸角、殼面及動態效果。
+Insert the completed design card for this candidate only.
 
 STYLE
-高完成度 2D 向量吉祥物；簡潔有張力的幾何輪廓、俐落邊緣、小尺寸清楚可辨識。外輪廓使用深海軍藍或近黑色連續粗描邊，內部重要結構使用較細同色線；二至三階向量式明暗、殼面寬弧高光、身體與配件的小面積高光，以及殼下和腹部的有色內陰影。保持平面圖形語言，不使用白色貼紙外框、幼兒繪本、學齡前貼紙、無描邊柔軟色塊、通用 emoji／chibi 臉、柔焦、厚塗、擬真、黏土或塑膠質感。
+Polished 2D vector mascot with clean energetic geometry, crisp edges, and clear recognition at small size. Use a continuous thick deep-navy or near-black outer stroke and thinner matching internal lines; two or three levels of vector shading; broad curved shell highlight; small body/accessory highlights; colored inner shadow under the shell and belly. Keep a flat graphic language. No white sticker border, preschool style, unoutlined soft blobs, generic emoji/chibi face, soft focus, painterly rendering, realism, clay, or plastic.
 ```
 
-概念預覽使用乾淨淺色單色背景；選定方向後才沿用同一定稿製作透明正式候選。
+Use a clean light solid background for concept previews. Only the selected design becomes the transparent final candidate.
 
-## 無圖片工具時的手動生成交接
+## Manual handoff when no image tool is available
 
-- 仍完成五階段流程與定稿設計卡，不得把提示詞縮成泛用描述。使用者未要求比較方向時，直接編譯透明正式候選，避免要求使用者手動搬運概念預覽與正式候選兩次。
-- 明說目前 AI 助理無法直接產生圖片，且遮罩只會由使用者自行上傳至其選定的圖片服務。以單一可複製的程式碼區塊提供完整提示詞，另提供 `assets/denden-generation-mask.png` 的絕對路徑，請使用者把該遮罩作為唯一參考圖片；AI 助理不得代為上傳其他資產。
-- 正式候選的 `HARD CONSTRAINTS` 必須同時要求透明背景、正方形畫布、主體完整置中且四周保留安全留白，不新增第四個提示詞段落。成品必須下載為原始 PNG，不得使用截圖或經通訊服務壓縮的副本。
-- 優先請使用者把原始 PNG 附回對話。介面不能附檔時，先解析使用者可見且 AI 助理可讀取的既有資料夾，優先使用系統下載資料夾；選定一個尚不存在、檔名以 `.png` 結尾的目標，回報完整絕對路徑並請使用者存入。不得只給相對路徑，也不得要求存進技能目錄、來源 checkout、DenDen 設定目錄或憑證目錄。
-- 取得檔案後，依生成後自檢與透明 PNG 要求驗證並顯示預覽；只有使用者明確接受後才回到外觀套用流程。若不合格，指出具體問題並沿用同一定稿提供針對性修正版提示詞，仍受本輪可見張數上限約束。
-- 使用者不願或無法使用外部圖片服務時，改提供內建 DenDen、匯入其他既有透明 PNG 或稍後設定。
+- Complete the five stages and design card. If the user did not request a comparison, compile the transparent final candidate directly.
+- State that the current assistant cannot generate the image. Provide the full prompt in one copyable code block and the absolute path to `assets/denden-generation-mask.png`; the user uploads that mask as the only reference.
+- Add transparent background, square canvas, complete centered subject, and safe margins to `HARD CONSTRAINTS`. Require the original PNG, not a screenshot or messenger-compressed copy.
+- Prefer that the user attach the original PNG. If attachment is impossible, choose a readable existing folder, preferably Downloads, select a new absolute `.png` path, and ask the user to save it there. Never use the skill, source, DenDen configuration, or credential directory.
+- Validate the returned file against this contract and show a preview. Apply it only after explicit acceptance. On failure, identify the exact defect and provide a targeted revised prompt for the same finalized design, still within the visible-image limit.
+- If the user declines an external service, offer the built-in DenDen, an existing transparent PNG, or later setup.
 
-## 重生成與生成後自檢
+## Regeneration and inspection
 
-- 重生成時，從另外兩個家族等機率選一個，重新抽取裝飾與動態效果數量，並重走三概念流程。不得重複上一候選的主題、具體配件或完整動態表現，且在主色、表情、觸角姿態與殼面處理中至少改變兩項；只在目前流程保留上一候選簽章。
-- **硬性失敗**：姿態直立或離開低伏遮罩主軸；不是臉上正好兩顆眼睛；觸角末端成為眼睛；觸角、裝飾或動態效果數量錯誤；新增肢體、長頸或額外凸起；主體比例明顯失真；缺少連續粗描邊、向量明暗、殼面光澤或有色內陰影；成為 3D、幼兒貼紙或通用 emoji／chibi。
-- **可接受差異**：不影響定稿的細微色相、線條曲率、非語意性表面細節，以及不呈眼睛結構的材質高光。
-- 使用者要求查看 `N` 張時，本輪最多呼叫圖片服務 `N` 次。達上限後即使有硬性失敗也不追加圖片；標示問題並等使用者決定是否另開一輪替換。
+- On regeneration, choose equally from the other two families and redraw decoration/effect counts. Do not repeat the previous theme, concrete accessories, or full motion treatment. Change at least two of: main palette, expression, tentacle pose, shell treatment.
+- **Hard failure:** upright/off-axis pose; not exactly two facial eyes; eye-like tentacle tips; wrong tentacle/decoration/effect count; new limbs, long neck, or protrusions; distorted proportions; missing continuous thick outline, vector shading, shell gloss, or colored inner shadow; 3D, preschool sticker, or generic emoji/chibi result.
+- **Acceptable variation:** minor hue, curve, nonsemantic surface detail, or non-eye material highlight that does not change the finalized design.
+- A request for `N` images permits at most `N` image-service calls in that round. At the limit, disclose any failed candidate and wait for the user to authorize another round.

@@ -25,4 +25,11 @@ class MessageRoutingTest {
         assertTrue(shouldPostStandaloneNotification(ring, false))
         assertTrue(shouldPostStandaloneNotification(ring.copy(action = "notify"), true))
     }
+
+    @Test
+    fun notificationRequiresGlobalAndChannelPermission() {
+        assertTrue(notificationVisibilityAvailable(true, true))
+        assertFalse(notificationVisibilityAvailable(false, true))
+        assertFalse(notificationVisibilityAvailable(true, false))
+    }
 }

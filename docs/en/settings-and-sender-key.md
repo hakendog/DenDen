@@ -69,7 +69,7 @@ First export a password-protected general settings package from a configured com
 
 After the import, the setup assistant asks you to sign in with the Google account that manages DenDen. Once you approve the summary, it creates a separate sender identity, saves the new key locally, confirms that it can send only FCM messages, and removes the administrative sign-in. The new computer sends a test notification, which you confirm on the phone.
 
-See [Add or disable a computer](setup.md#add-or-disable-a-computer) for complete steps.
+See [Add or disable a computer](device-management.md#add-or-disable-a-computer) for complete steps.
 
 Bixby and Tasker on Android create DenDen messages only on the same phone. Another Android phone cannot currently act as a remote sender.
 
@@ -77,4 +77,4 @@ Bixby and Tasker on Android create DenDen messages only on the same phone. Anoth
 
 If a computer is lost or retired, you can disable only its sender identity without affecting other computers or phones. If pairing information or the notification encryption key leaked, replace the entire pairing and pair every phone you keep again.
 
-See the [CLI reference](cli.md) for commands and setting formats. See the [DenDen setup assistant](setup.md) for normal operations.
+See the [CLI reference](cli.md) for commands and setting formats. See [Add and manage devices](device-management.md) for normal operations.

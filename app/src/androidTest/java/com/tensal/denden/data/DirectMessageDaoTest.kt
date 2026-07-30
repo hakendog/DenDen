@@ -206,4 +206,14 @@ class DirectMessageDaoTest {
         assertEquals("local-tasker-1", inbox.single().latestEvent.eventId)
         assertEquals("Tasker", inbox.single().displayName)
     }
+
+    @Test
+    fun expiredPendingAlertsAreRemoved() = runTest {
+        val event = DenDenEvent(eventId = "expired-alert", action = "notify", receivedAt = 100)
+        assertEquals(DirectEventCommit.INSERTED, dao.commitEvent("pairing", "expired-message", "digest", 200, event))
+
+        assertEquals(0, dao.deleteExpiredAlerts(200))
+        assertEquals(1, dao.deleteExpiredAlerts(201))
+        assertEquals(null, dao.pendingAlert("expired-alert"))
+    }
 }

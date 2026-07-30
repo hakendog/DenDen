@@ -105,6 +105,9 @@ interface DirectMessageDao {
     @Query("DELETE FROM stop_tombstones WHERE expiresAtMillis < :beforeMillis")
     suspend fun deleteExpiredTombstones(beforeMillis: Long): Int
 
+    @Query("DELETE FROM pending_alerts WHERE expiresAtMillis < :beforeMillis")
+    suspend fun deleteExpiredAlerts(beforeMillis: Long): Int
+
     @Transaction
     suspend fun commitEvent(
         pairingId: String,

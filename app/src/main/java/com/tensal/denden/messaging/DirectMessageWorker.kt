@@ -239,6 +239,7 @@ private suspend fun receiveDirectMessageLocked(
     SharedPrefsMessageHealthStore(context).record(nowMillis, action, degradedReason, visible)
     dao.deleteExpiredReceipts(nowMillis)
     dao.deleteExpiredTombstones(nowMillis)
+    dao.deleteExpiredAlerts(nowMillis)
     return DirectReceiveResult(true, action, duplicate, degradedReason)
 }
 
@@ -276,8 +277,11 @@ internal suspend fun dispatchDirectEvent(
         dao.finishAlert(eventId, "degraded", now, "degraded_priority")
         return DispatchEvidence(true, "degraded_priority")
     }
-    if (event.action == "ring") startDirectAlarm(context, event)
-    dao.finishAlert(eventId, "executed", now, null)
+    if (event.action == "ring") {
+        startDirectAlarm(context, event)
+    } else {
+        dao.finishAlert(eventId, "executed", now, null)
+    }
     return DispatchEvidence(true, null)
 }
 
@@ -315,9 +319,11 @@ private fun directNotificationAvailable(context: Context, event: DenDenEvent): B
     if (Build.VERSION.SDK_INT >= 33 &&
         context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
     ) return false
+    val globallyEnabled = NotificationManagerCompat.from(context).areNotificationsEnabled()
     val channelId = notificationChannelId(event)
     val manager = context.getSystemService(NotificationManager::class.java)
-    return manager.getNotificationChannel(channelId)?.importance != NotificationManager.IMPORTANCE_NONE
+    val channelEnabled = manager.getNotificationChannel(channelId)?.importance != NotificationManager.IMPORTANCE_NONE
+    return notificationVisibilityAvailable(globallyEnabled, channelEnabled)
 }
 
 private fun startDirectAlarm(context: Context, event: DenDenEvent) {

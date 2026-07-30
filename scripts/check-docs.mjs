@@ -14,7 +14,8 @@ const files = [
   ...markdownFiles(join(root, "docs", "zh-TW")).map((path) => relative(root, path)),
 ];
 const failures = [];
-const banned = /<owner>|<verified-full-commit-sha>|<40 碼完整 commit SHA>|<full 40-character commit SHA>|D:\\workspace\\DenDen|UNLICENSED|尚未發布的本機來源|主要賣點|預發布|本機驗收|刻意保持不可執行/;
+const banned = /<owner>|<verified-full-commit-sha>|D:\\workspace\\DenDen|UNLICENSED|尚未發布的本機來源|主要賣點|預發布|本機驗收|刻意保持不可執行/;
+const unpinnedInstallGuide = /raw\.githubusercontent\.com\/hakendog\/DenDen\/(?![0-9a-f]{40}\/)/;
 
 if (JSON.stringify(enPages) !== JSON.stringify(zhPages)) failures.push("繁中與英文文件頁面必須一一對應");
 
@@ -27,6 +28,9 @@ for (const file of files) {
     if (headings[index] > headings[index - 1] + 1) failures.push(`${file}: 標題階層不連續`);
   }
   if (banned.test(text)) failures.push(`${file}: 含公開文件禁止內容`);
+  if (file !== "docs/agent-install.md" && unpinnedInstallGuide.test(text)) {
+    failures.push(`${file}: AI 安裝入口必須使用已發佈的完整 commit SHA`);
+  }
 
   for (const match of text.matchAll(/!?\[([^\]]*)\]\(([^)]+)\)/g)) {
     const isImage = match[0].startsWith("!");

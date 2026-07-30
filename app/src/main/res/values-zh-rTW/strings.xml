@@ -82,9 +82,10 @@
     <string name="builtin_denden_active">使用內建 DenDen</string>
     <string name="denden_generation">DenDen 外觀版本：%1$d</string>
     <string name="candidate_generation">待確認的外觀版本：%1$d</string>
-    <string name="brand_receiving">接收中：%1$d/%2$d 片 · %3$s</string>
+    <plurals name="brand_receiving">
+        <item quantity="other">接收中：%1$d/%2$d 片 · %3$s</item>
+    </plurals>
     <string name="shortcut_retry_pending">捷徑圖示等待前景重試</string>
-    <string name="brand_error">外觀錯誤：%1$s</string>
     <string name="brand_pairing_note">配對後可更新或恢復內建 DenDen，不需重新掃描 DenDen 配對碼。</string>
     <string name="health_status">運作狀態</string>
     <string name="alarm_test">警報測試</string>
@@ -119,7 +120,7 @@
     <string name="overlay_not_required">DenDen 不需要「顯示在其他應用程式上層」權限。暫不授權仍可繼續，之後可在設定中調整。</string>
     <string name="next">下一步</string>
     <string name="local_demo_title">10 秒本機示範</string>
-    <string name="in_progress">執行中…</string>
+    <string name="operation_in_progress">執行中…</string>
     <string name="local_demo_description">不需要 Firebase、帳號或網路；只測試這台裝置的響鈴與解除警報。</string>
     <string name="demo_running">示範進行中</string>
     <string name="start_demo">開始示範</string>
@@ -137,10 +138,7 @@
     <string name="confirm_and_pair">確認並配對</string>
     <string name="enter_again">重新輸入</string>
 
-    <string name="channels">頻道</string>
-    <string name="messages">訊息</string>
     <string name="archive">封存</string>
-    <string name="archived_channels">封存的頻道</string>
     <string name="archived_channels_description">封存的頻道不會出現在主頁；你可以隨時取消封存。</string>
     <string name="no_archived_channels">尚無封存頻道</string>
     <string name="unarchive">取消封存</string>
@@ -154,10 +152,8 @@
     <string name="just_now">剛剛</string>
     <string name="long_ago">很久以前</string>
     <string name="channel_archived">%1$s 已封存</string>
-    <string name="channel_unarchived">%1$s 已取消封存</string>
     <string name="channel_moved_to_trash">%1$s 已移至垃圾桶</string>
     <string name="undo">復原</string>
-    <string name="archive_failed">無法更新頻道封存狀態</string>
     <string name="trash_failed">無法將頻道移至垃圾桶</string>
     <string name="restore_failed">無法復原頻道</string>
     <string name="channel_restored">頻道已復原</string>
@@ -199,10 +195,14 @@
     <string name="event_missed">未送達</string>
 
     <string name="trash">垃圾桶</string>
-    <string name="trash_count">垃圾桶共有 %1$d 個頻道</string>
+    <plurals name="trash_count">
+        <item quantity="other">垃圾桶共有 %1$d 個頻道</item>
+    </plurals>
     <string name="trash_description">已刪除的頻道暫存在這裡，保留 30 天，可還原或開啟記錄後永久刪除。</string>
     <string name="trash_empty">垃圾桶是空的</string>
-    <string name="trashed_channel_summary">%1$d 則事件 · 剩餘 %2$d 天</string>
+    <plurals name="trashed_channel_summary">
+        <item quantity="other">%1$d 則事件 · 剩餘 %2$d 天</item>
+    </plurals>
     <string name="note">注意</string>
     <string name="local_only">僅影響本機</string>
     <string name="other_devices_unaffected">其他裝置的本機歷史不會跟著刪除。</string>
@@ -292,7 +292,6 @@
     <string name="tasker_title">標題</string>
     <string name="tasker_message">訊息</string>
     <string name="tasker_duration">警報秒數</string>
-    <string name="tasker_capability">授權</string>
     <string name="tasker_variables_hint">文字欄位支援 %title、%message 等 Tasker 變數。</string>
     <string name="tasker_save_action">儲存動作</string>
     <string name="tasker_channel_name">Tasker</string>

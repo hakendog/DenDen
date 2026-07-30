@@ -38,7 +38,7 @@ class SetupScreenTest {
         composeRule.onNodeWithText("下一步").performScrollTo().performClick()
         composeRule.onNodeWithText("10 秒本機示範").assertIsDisplayed()
         composeRule.onNodeWithText("跳過示範").performClick()
-        composeRule.onNodeWithText("掃描 QR Code").assertIsDisplayed()
+        composeRule.onNodeWithText("掃描 DenDen 配對碼").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("檢查配對").assertIsNotEnabled()
         composeRule.onNodeWithText("後端 URL").assertDoesNotExist()
         composeRule.onNodeWithText("DDC 或邀請網址").assertDoesNotExist()
@@ -65,7 +65,8 @@ class SetupScreenTest {
         composeRule.onNodeWithText("確認配對").assertIsDisplayed()
         composeRule.onNodeWithText("my-denden").assertIsDisplayed()
         composeRule.onNodeWithText("denden.example").assertIsDisplayed()
-        composeRule.onNodeWithText("確認後會在這台手機安全保存配對資料，並訂閱私有 FCM 主題。").assertIsDisplayed()
+        composeRule.onNodeWithText("確認後，配對資料會安全保存在這台手機，並開始接收這組 DenDen 訊息。")
+            .performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("確認後才會建立本機匿名身分並消耗一次性邀請。").assertDoesNotExist()
         composeRule.onNodeWithText("確認並配對").assertIsEnabled().assertIsFocused().performClick()
         composeRule.runOnIdle { assertTrue(confirmed) }

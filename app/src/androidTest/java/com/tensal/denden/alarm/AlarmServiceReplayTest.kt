@@ -142,6 +142,35 @@ class AlarmServiceReplayTest {
         assertEquals("stopped", repo.getEventByEventId(firstEventId)?.state)
         assertEquals("stopped", repo.getEventByEventId(secondEventId)?.state)
     }
+
+    @Test
+    fun differentAlarmWaitsForActiveAlarmInsteadOfBeingLost() = runBlocking {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val firstEventId = "queued-first-${UUID.randomUUID()}"
+        val secondEventId = "queued-second-${UUID.randomUUID()}"
+        val repo = EventRepository(EventDatabase.getInstance(context).eventDao())
+        seedPendingAlarm(context, firstEventId)
+        seedPendingAlarm(context, secondEventId)
+        NotificationChannels.create(context)
+
+        ActivityScenario.launch(MainActivity::class.java).use {
+            ContextCompat.startForegroundService(context, ringIntent(context, firstEventId, duration = 1))
+            awaitState(repo, firstEventId, "ringing")
+            ContextCompat.startForegroundService(context, ringIntent(context, secondEventId, duration = 30))
+
+            awaitState(repo, secondEventId, "ringing")
+
+            ContextCompat.startForegroundService(context, Intent(context, AlarmService::class.java).apply {
+                action = AlarmService.STOP_ALARM_ACTION
+                putExtra(AlarmService.EXTRA_EVENT_ID, secondEventId)
+                putExtra(AlarmService.EXTRA_REMOTE_STOP, true)
+            })
+            awaitServiceStopped(context)
+        }
+
+        assertEquals("stopped", repo.getEventByEventId(firstEventId)?.state)
+        assertEquals("stopped", repo.getEventByEventId(secondEventId)?.state)
+    }
 }
 
 private suspend fun seedPendingAlarm(context: Context, eventId: String) {

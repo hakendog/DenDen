@@ -47,8 +47,26 @@ All history stays on the current phone. Read, archive, and delete states do not 
 
 Bixby and Tasker can create DenDen messages directly. They do not require an AI assistant or remote pairing. See [Bixby and Tasker](local-automation.md).
 
-## Change settings
+## Add a sending device (computer)
 
-Tell your AI assistant when you want to change notification preferences, add a phone, update the DenDen image, back up settings, or disable an old computer. The setup assistant checks the current state and waits for you to approve a change summary. See the [DenDen setup assistant](setup.md) for detailed steps.
+To send DenDen notifications from another computer, ask the AI assistant on a working computer to export encrypted settings, then move that package to the new computer. The setup assistant creates separate sender permission for the new computer instead of sharing the old computer's private files.
+
+Confirm that your phone receives a test notification from the new computer. See [Add or disable a computer](device-management.md#add-or-disable-a-computer) for the complete procedure.
+
+## Add a receiving device (phone)
+
+Install DenDen on the new Android phone and allow notifications, then ask your AI assistant to add a phone. Scan the short-lived DenDen pairing code on the new phone and confirm the test notification. Existing phones remain paired and do not need to be set up again.
+
+See [Add a phone](device-management.md#add-a-phone) for the complete procedure.
+
+## Change the DenDen image
+
+Tell your AI assistant that you want to change the DenDen image. You can use the built-in image, generate a new one, or import a transparent PNG. The setup assistant shows a preview and sends the image to paired phones only after you approve it. Changing the image does not require pairing again.
+
+See [Change the DenDen image](preferences-and-backup.md#change-the-denden-image) for the complete procedure.
+
+## Other everyday settings
+
+Tell your AI assistant when you want to change notification preferences, back up settings, update DenDen, or disable an old computer. The setup assistant checks the current state and waits for you to approve a change summary. See [Add and manage devices](device-management.md) and [Notifications, images, and backups](preferences-and-backup.md) for detailed steps.
 
 Read the [CLI reference](cli.md) only when you need to build your own command-line integration.

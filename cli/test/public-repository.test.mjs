@@ -56,8 +56,6 @@ test("public history check detects a forbidden path deleted from the current tre
 
     const failures = inspectPublicRepository(2, repository);
     assert(failures.some((failure) => failure.includes(".agents/private.md: 歷史含非公開路徑")));
-    const ongoingFailures = inspectPublicRepository(undefined, repository);
-    assert.equal(ongoingFailures.some((failure) => failure.includes("公開歷史應有")), false);
   } finally {
     await rm(repository, { recursive: true, force: true });
   }

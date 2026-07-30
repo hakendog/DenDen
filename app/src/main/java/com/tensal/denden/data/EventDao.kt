@@ -33,6 +33,15 @@ interface EventDao {
     @Query("DELETE FROM channel_state WHERE channelId = :channelId")
     suspend fun deleteChannelState(channelId: String)
 
+    @Query("DELETE FROM pending_alerts WHERE eventId IN (SELECT eventId FROM events WHERE channelId = :channelId)")
+    suspend fun deletePendingAlertsByChannelId(channelId: String)
+
+    @Query("DELETE FROM message_receipts WHERE eventId IN (SELECT eventId FROM events WHERE channelId = :channelId)")
+    suspend fun deleteMessageReceiptsByChannelId(channelId: String)
+
+    @Query("DELETE FROM stop_tombstones WHERE eventId IN (SELECT eventId FROM events WHERE channelId = :channelId)")
+    suspend fun deleteStopTombstonesByChannelId(channelId: String)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertTrashedChannel(channel: TrashedChannel)
 
@@ -78,6 +87,7 @@ interface EventDao {
     @Transaction
     suspend fun preparePermanentTrashDeletion(channelId: String): Boolean {
         if (getActiveTrashedChannel(channelId) == null) return false
+        deleteDirectMetadataByChannelId(channelId)
         deleteByChannelId(channelId)
         deleteChannelState(channelId)
         return markTrashPendingPreferences(channelId) == 1
@@ -87,10 +97,17 @@ interface EventDao {
     suspend fun prepareExpiredTrashCleanup(nowMillis: Long): Int {
         val expired = getExpiredTrashedChannels(nowMillis)
         expired.forEach { channel ->
+            deleteDirectMetadataByChannelId(channel.channelId)
             deleteByChannelId(channel.channelId)
             deleteChannelState(channel.channelId)
             markTrashPendingPreferences(channel.channelId)
         }
         return expired.size
+    }
+
+    private suspend fun deleteDirectMetadataByChannelId(channelId: String) {
+        deletePendingAlertsByChannelId(channelId)
+        deleteMessageReceiptsByChannelId(channelId)
+        deleteStopTombstonesByChannelId(channelId)
     }
 }

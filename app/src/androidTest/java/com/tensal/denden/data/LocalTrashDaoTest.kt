@@ -52,6 +52,10 @@ class LocalTrashDaoTest {
         readState.setArchived("trash-target", true)
         database.commit(DenDenEvent(eventId = "target", action = "notify", channelId = "trash-target"))
         database.commit(DenDenEvent(eventId = "other", action = "notify", channelId = "other"))
+        database.directMessageDao().commitStop(
+            StopTombstone("target", "test", "stop-target", 200L, 2_000L),
+            "stop-target"
+        )
         repository.moveChannelToTrash("trash-target", 1_000L)
 
         assertTrue(repository.preparePermanentDelete("trash-target"))
@@ -61,6 +65,9 @@ class LocalTrashDaoTest {
         assertFalse(readState.isArchived("trash-target"))
         assertFalse(readState.getLastReadAtByChannel().containsKey("trash-target"))
         assertEquals(listOf("other"), repository.getAllEvents().map { it.channelId })
+        assertNull(database.directMessageDao().pendingAlert("target"))
+        assertNull(database.directMessageDao().receipt("test", "target"))
+        assertNull(database.directMessageDao().tombstone("target"))
         assertTrue(repository.getPendingTrashCleanup().isEmpty())
     }
 

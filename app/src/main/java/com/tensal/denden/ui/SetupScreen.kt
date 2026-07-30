@@ -39,6 +39,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -185,20 +186,22 @@ private fun SetupPage(
             )
         }
 
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-        ) {
-            Column(
+        key(step) {
+            BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .heightIn(min = maxHeight)
-                    .padding(horizontal = 24.dp, vertical = 24.dp),
-                verticalArrangement = Arrangement.Center
+                    .weight(1f)
             ) {
-                content()
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .heightIn(min = maxHeight)
+                        .padding(horizontal = 24.dp, vertical = 24.dp),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    content()
+                }
             }
         }
     }
@@ -390,7 +393,7 @@ private fun DemoStep(
                     color = DenDenColors.onSurface
                 )
                 Text(
-                    text = if (inProgress) stringResource(R.string.in_progress) else "00:10",
+                    text = if (inProgress) stringResource(R.string.operation_in_progress) else "00:10",
                     style = MaterialTheme.typography.labelLarge,
                     color = DenDenColors.primary
                 )
@@ -517,15 +520,16 @@ private fun PairingStep(
             title = { Text(confirmTitle) },
             text = {
             Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                ConfirmationRow(firebaseProjectLabel, state.confirmFirebaseProjectId)
-                ConfirmationRow(scopeLabel, state.confirmDomain)
                 Text(
                     text = confirmationNote,
                     style = MaterialTheme.typography.bodySmall,
                     color = DenDenColors.onSurfaceVariant
                 )
+                ConfirmationRow(firebaseProjectLabel, state.confirmFirebaseProjectId)
+                ConfirmationRow(scopeLabel, state.confirmDomain)
             }
             },
             confirmButton = {

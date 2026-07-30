@@ -20,7 +20,9 @@
     "verify:repository": "node scripts/check-repository.mjs",
     "verify:public": "node scripts/check-public-repository.mjs",
     "verify:docs": "node scripts/check-docs.mjs",
-    "verify:apk": "node scripts/check-debug-apk.mjs"
+    "verify:apk": "node scripts/check-debug-apk.mjs",
+    "check:denden-skill": "node scripts/sync-denden-skill.mjs --check",
+    "sync:denden-skill": "node scripts/sync-denden-skill.mjs --write"
   },
   "dependencies": {
     "pngjs": "5.0.0",

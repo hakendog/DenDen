@@ -111,7 +111,7 @@ export function buildDirectFcmMessage({ action, payload, config, nowMillis = Dat
         data,
         android: {
           priority: action === "ring" || isStop ? "HIGH" : "NORMAL",
-          ttl: action === "ring" || isStop ? "60s" : "300s",
+          ttl: "0s",
         },
       },
     },

@@ -5,7 +5,12 @@ import { findForbiddenRepositoryContent } from "./check-repository.mjs";
 
 const exactPaths = new Set([
   ".github/workflows/ci.yml",
+  ".github/ISSUE_TEMPLATE/bug_report.yml",
+  ".github/ISSUE_TEMPLATE/config.yml",
+  ".github/ISSUE_TEMPLATE/feature_request.yml",
+  ".github/pull_request_template.md",
   ".gitignore",
+  "CONTRIBUTING.md",
   "LICENSE",
   "README.md",
   "README.zh-TW.md",
@@ -24,6 +29,7 @@ const exactPaths = new Set([
   "scripts/check-public-repository.mjs",
   "scripts/check-repository.mjs",
   "scripts/install-debug.ps1",
+  "scripts/sync-denden-skill.mjs",
   "settings.gradle.kts",
 ]);
 
@@ -62,7 +68,7 @@ const forbiddenPatterns = [
   /(^|\/)\.agents\//,
   /(^|\/)\.adw\//,
   /(^|\/)\.codex\//,
-  /(^|\/)(?:AGENTS|CONTEXT|LESSONS|CONTRIBUTING|spec)\.md$/i,
+  /(^|\/)(?:AGENTS|CONTEXT|LESSONS|spec)\.md$/i,
   /^design\//,
   /^docs\/(?:adr|agent-retro)\//,
   /^docs\/(?:demo-storyboard|manual-acceptance|release-checklist)\.md$/,
@@ -93,7 +99,7 @@ function git(args, cwd, options = {}) {
 
 function parseExpectedCommits(argv) {
   const index = argv.indexOf("--expected-commits");
-  if (index === -1) return undefined;
+  if (index === -1) return null;
   const value = Number(argv[index + 1]);
   if (!Number.isInteger(value) || value < 1) throw new Error("--expected-commits 必須是正整數");
   return value;
@@ -114,7 +120,7 @@ function inspectBlob(oid, path, failures, cwd) {
   }
 }
 
-export function inspectPublicRepository(expectedCommits, cwd = process.cwd()) {
+export function inspectPublicRepository(expectedCommits = null, cwd = process.cwd()) {
   const failures = [];
   const indexLines = git(["ls-files", "--stage", "-z"], cwd).split("\0").filter(Boolean);
   const paths = new Set();
@@ -132,7 +138,9 @@ export function inspectPublicRepository(expectedCommits, cwd = process.cwd()) {
   for (const path of requiredPaths) if (!paths.has(path)) failures.push(`${path}: 缺少必要公開檔案`);
 
   const commits = git(["rev-list", "--all"], cwd).trim().split(/\r?\n/).filter(Boolean);
-  if (expectedCommits !== undefined && commits.length !== expectedCommits) failures.push(`公開歷史應有 ${expectedCommits} 個 commit，目前為 ${commits.length}`);
+  if (expectedCommits != null && commits.length !== expectedCommits) {
+    failures.push(`公開歷史應有 ${expectedCommits} 個 commit，目前為 ${commits.length}`);
+  }
   for (const commit of commits) {
     const historicalPaths = git(["ls-tree", "-r", "--name-only", "-z", commit], cwd).split("\0").filter(Boolean);
     for (const path of historicalPaths) {

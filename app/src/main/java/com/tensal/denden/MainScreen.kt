@@ -48,6 +48,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -627,7 +628,7 @@ private fun ChannelHeaderActions(
     modifier: Modifier = Modifier
 ) {
     val trashDescription = if (trashCount > 0) {
-        stringResource(R.string.trash_count, trashCount)
+        pluralStringResource(R.plurals.trash_count, trashCount, trashCount)
     } else {
         stringResource(R.string.trash)
     }

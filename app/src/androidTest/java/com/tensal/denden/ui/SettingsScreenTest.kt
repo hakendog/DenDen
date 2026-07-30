@@ -86,9 +86,9 @@ class SettingsScreenTest {
             }
         }
         composeRule.onNodeWithText("自訂 DenDen 已啟用").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("DenDen 世代：7").assertIsDisplayed()
-        composeRule.onNodeWithText("接收中：3/8 片 · transfer1234").assertIsDisplayed()
-        composeRule.onNodeWithText("捷徑圖示等待前景重試").assertIsDisplayed()
+        composeRule.onNodeWithText("DenDen 外觀版本：7").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("接收中：3/8 片 · transfer1234").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("捷徑圖示等待前景重試").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("abcdef123456").assertDoesNotExist()
     }
 

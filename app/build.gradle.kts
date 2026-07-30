@@ -64,6 +64,17 @@ android {
     buildFeatures {
         compose = true
     }
+
+    bundle {
+        language {
+            enableSplit = false
+        }
+    }
+
+    lint {
+        // Synchronous preference commits protect state transitions; KTX and update hints are non-release style advisories.
+        disable += setOf("ApplySharedPref", "GradleDependency", "ObsoleteSdkInt", "UseKtx")
+    }
 }
 
 room {

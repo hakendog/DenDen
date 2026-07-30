@@ -1,4 +1,4 @@
 interface:
-  display_name: "DenDen 設定"
-  short_description: "安全設定直接 FCM、單一 QR 配對、DenDen 外觀與其他裝置"
-  default_prompt: "使用 $denden-setup 依固定來源流程設定或管理 DenDen。"
+  display_name: "DenDen Setup"
+  short_description: "Set up Direct FCM, pairing, appearance, and additional devices"
+  default_prompt: "Use $denden-setup to set up or manage DenDen from the verified bundled source."

@@ -82,9 +82,11 @@
     <string name="builtin_denden_active">Using built-in DenDen</string>
     <string name="denden_generation">DenDen generation: %1$d</string>
     <string name="candidate_generation">Appearance candidate: generation %1$d · waiting for approval</string>
-    <string name="brand_receiving">Receiving: %1$d/%2$d chunks · %3$s</string>
+    <plurals name="brand_receiving">
+        <item quantity="one">Receiving: %1$d/%2$d chunk · %3$s</item>
+        <item quantity="other">Receiving: %1$d/%2$d chunks · %3$s</item>
+    </plurals>
     <string name="shortcut_retry_pending">Shortcut icon update will retry in the foreground</string>
-    <string name="brand_error">Appearance error: %1$s</string>
     <string name="brand_pairing_note">Update or restore the built-in DenDen after pairing—no new QR Code required.</string>
     <string name="health_status">Health status</string>
     <string name="alarm_test">Alarm test</string>
@@ -119,7 +121,7 @@
     <string name="overlay_not_required">DenDen does not need “Display over other apps.” You can continue without optional permissions and change them later in Settings.</string>
     <string name="next">Next</string>
     <string name="local_demo_title">10-second local demo</string>
-    <string name="in_progress">Running…</string>
+    <string name="operation_in_progress">Running…</string>
     <string name="local_demo_description">No Firebase, account, or network needed. This only tests ringing and stopping on this device.</string>
     <string name="demo_running">Demo running</string>
     <string name="start_demo">Start demo</string>
@@ -137,10 +139,7 @@
     <string name="confirm_and_pair">Confirm and pair</string>
     <string name="enter_again">Enter again</string>
 
-    <string name="channels">Channels</string>
-    <string name="messages">Messages</string>
     <string name="archive">Archive</string>
-    <string name="archived_channels">Archived channels</string>
     <string name="archived_channels_description">Archived channels stay off the home screen. Restore them at any time.</string>
     <string name="no_archived_channels">No archived channels</string>
     <string name="unarchive">Unarchive</string>
@@ -154,10 +153,8 @@
     <string name="just_now">Just now</string>
     <string name="long_ago">A while ago</string>
     <string name="channel_archived">%1$s archived</string>
-    <string name="channel_unarchived">%1$s restored from archive</string>
     <string name="channel_moved_to_trash">%1$s moved to trash</string>
     <string name="undo">Undo</string>
-    <string name="archive_failed">Could not update the archive</string>
     <string name="trash_failed">Could not move the channel to trash</string>
     <string name="restore_failed">Could not restore the channel</string>
     <string name="channel_restored">Channel restored</string>
@@ -199,10 +196,16 @@
     <string name="event_missed">Missed</string>
 
     <string name="trash">Trash</string>
-    <string name="trash_count">Trash contains %1$d channels</string>
+    <plurals name="trash_count">
+        <item quantity="one">Trash contains %1$d channel</item>
+        <item quantity="other">Trash contains %1$d channels</item>
+    </plurals>
     <string name="trash_description">Deleted channels stay here for 30 days. Restore one, or open its history to delete it permanently.</string>
     <string name="trash_empty">Trash is empty</string>
-    <string name="trashed_channel_summary">%1$d events · %2$d days left</string>
+    <plurals name="trashed_channel_summary">
+        <item quantity="one">%1$d event · %2$d days left</item>
+        <item quantity="other">%1$d events · %2$d days left</item>
+    </plurals>
     <string name="note">Note</string>
     <string name="local_only">Local only</string>
     <string name="other_devices_unaffected">Local history on other devices is not deleted.</string>
@@ -292,7 +295,6 @@
     <string name="tasker_title">Title</string>
     <string name="tasker_message">Message</string>
     <string name="tasker_duration">Alarm duration (seconds)</string>
-    <string name="tasker_capability">Authorization</string>
     <string name="tasker_variables_hint">Tasker variables such as %title and %message are supported in text fields.</string>
     <string name="tasker_save_action">Save action</string>
     <string name="tasker_channel_name">Tasker</string>

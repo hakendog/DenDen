@@ -869,10 +869,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun openBatteryOptimizationSettings() {
-        Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-            data = Uri.fromParts("package", packageName, null)
-            startActivity(this)
-        }
+        startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
     }
 
     private fun openDndSettings() {

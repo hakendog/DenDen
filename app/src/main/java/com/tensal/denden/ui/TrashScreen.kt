@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tensal.denden.DenDenColors
@@ -41,7 +42,7 @@ fun TrashScreen(
     onRestore: (String) -> Unit
 ) {
     val inboxItems = (channelItems ?: events.toChannelInboxItems()).associateBy { it.channelId }
-    val trashCountDescription = stringResource(R.string.trash_count, channels.size)
+    val trashCountDescription = pluralStringResource(R.plurals.trash_count, channels.size, channels.size)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -115,8 +116,9 @@ fun TrashScreen(
                             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text(item?.displayName ?: trashed.channelId, fontWeight = FontWeight.Medium)
                                 Text(
-                                    stringResource(
-                                        R.string.trashed_channel_summary,
+                                    pluralStringResource(
+                                        R.plurals.trashed_channel_summary,
+                                        item?.eventCount ?: 0,
                                         item?.eventCount ?: 0,
                                         remainingTrashDays(trashed.purgeAtMillis)
                                     ),

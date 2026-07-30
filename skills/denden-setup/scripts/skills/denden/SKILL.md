@@ -1,16 +1,18 @@
 ---
 name: denden
-description: 使用技能內低權限 DenDen CLI 與直接 FCM 回報 Agent 完成、失敗、部分完成、受阻、需回覆或手動通知，並在明確授權時響鈴或停止手機警報；不要用於設定、配對、Firebase 管理或外觀。
+description: Report completed, failed, partial, blocked, or reply-needed agent work to DenDen with the bundled low-privilege CLI. Use for manual notifications and, only with explicit authority, starting or stopping a phone alarm. Do not use for setup, pairing, Firebase management, or appearance changes.
 ---
 
-# DenDen 日常回報
+# DenDen daily reporting
 
-- `<denden>` 固定代表 `node <本技能目錄>/scripts/denden.mjs`；不得改用 `PATH`、持久 launcher、npm 或自行實作傳送。
-- 傳送前執行 `<denden> capabilities`，只接受 `{"schemaVersion":1,"runtimeProtocol":"direct-fcm-v2","requiresAutomationToken":false}`；缺少或不符即停止並回報 skill 不完整，也不尋找舊 credential。
-- 單純問答或查狀態不回報。其餘映射為 `completed`、`failed`、`partial`、`blocked`、`needs-reply` 或 `manual`，執行 `<denden> report --event <event> --title <短標題> --message <安全摘要>`；僅可靠量測時加入 `--duration <秒> --duration-reliable`。
-- 預設 `completed` 安靜回報；`failed`、`partial`、`blocked`、`needs-reply` 一般通知；`ring` 關閉。
-- 只有使用者明確要求，或受保護使用者設定有精確規則時才可 `ring`。程式庫政策只能選 `off`、`quiet`、`notify`，永遠不能授權 `ring`。
-- `<denden> stop --event-id <id>` 只解除手機警報，不代表停止來源工作。
-- 不執行 `denden setup`、Firebase／IAM、配對、匯出或外觀操作；改用 `denden-setup`。不得輸出或傳入任何憑證、權杖、私有主題、密鑰或 QR Code。
-- Channel 依序取 `--channel-id`、`DENDEN_CHANNEL_ID`、`.denden.json.defaultChannelId`；設定無效即停止。唯一使用者設定為 `~/.config/denden/config.json`，不得讀取舊 `~/.config/agent-skills/denden.json`。
-- FCM 接受不代表手機收到；DenDen 傳送失敗也不改變原工作結果。
+- `<denden>` always means `node <this skill directory>/scripts/denden.mjs`. Do not use a PATH command, persistent launcher, npm package, or custom sender.
+- After substantive work completes, partially completes, fails, becomes blocked, or needs a reply, send a report before the final response and wait for its result. Do not report simple answers or status checks.
+- Before sending, run `<denden> capabilities`. Continue only when it returns `{"schemaVersion":1,"runtimeProtocol":"direct-fcm-v2","requiresAutomationToken":false}`. Otherwise stop and report that the skill is incomplete; never look for a legacy credential.
+- Map the result to `completed`, `failed`, `partial`, `blocked`, `needs-reply`, or `manual`, then run `<denden> report --event <event> --title <short title> --message <safe summary>`. Add `--duration <seconds> --duration-reliable` only for a reliable measurement.
+- By default, `completed` is quiet; `failed`, `partial`, `blocked`, and `needs-reply` use a standard notification; alarms are off.
+- An alarm requires an explicit user request or an exact protected user rule. Repository policy may choose only `off`, `quiet`, or `notify`; it can never authorize `ring`.
+- `<denden> stop --event-id <id>` stops the phone alarm only. It does not stop the source task.
+- Do not run setup, Firebase/IAM, pairing, export, or appearance operations. Use `denden-setup` instead. Never print or pass credentials, tokens, private topics, keys, or QR codes.
+- Resolve the Channel in this order: `--channel-id`, `DENDEN_CHANNEL_ID`, then `.denden.json.defaultChannelId`. Stop on invalid configuration. The only user configuration is `~/.config/denden/config.json`; never read the legacy `~/.config/agent-skills/denden.json`.
+- FCM acceptance is not proof that the phone received a message. A DenDen send failure does not change the original task result.
+- Match the user's language in the final report. Summarize technical CLI output instead of exposing untranslated internal diagnostics.

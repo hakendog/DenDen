@@ -14,7 +14,7 @@ DenDen has no central synchronization service. Each phone keeps its own received
 
 ## Remote notifications still pass through Google
 
-Google FCM handles phone registration and notification delivery. Google may store metadata such as delivery time, data size, project information, and the destination message channel according to its policies.
+Google FCM handles phone registration and notification delivery. Google may process metadata such as delivery time, data size, project information, and the private FCM topic identifier according to its policies.
 
 DenDen encrypts the notification title and message text on the computer before sending them through your Firebase project. Google processes the ciphertext and delivery metadata, but it does not receive directly readable notification content.
 
@@ -22,7 +22,7 @@ DenDen encrypts the notification title and message text on the computer before s
 
 A DenDen pairing code contains secrets needed to join your private message channel. Do not capture, forward, paste into a conversation, or upload it to another service.
 
-Each sender computer has its own permission, limited to sending DenDen notifications. Do not copy settings from an old computer when adding another one. If a computer is lost or retired, or a DenDen pairing code may have leaked, follow the [setup assistant guide](setup.md) to disable that computer or replace the entire pairing.
+Each sender computer has its own permission, limited to sending DenDen notifications. Do not copy settings from an old computer when adding another one. If a computer is lost or retired, or a DenDen pairing code may have leaked, follow [Add and manage devices](device-management.md) to disable that computer or replace the entire pairing.
 
 ## Updates and data removal
 

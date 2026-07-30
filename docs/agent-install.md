@@ -1,53 +1,51 @@
 # Install the DenDen setup assistant
 
-This page only installs the `denden-setup` skill. Use that skill immediately after installation.
+This page installs only the `denden-setup` skill. Use that skill immediately after installation.
 
-1. Ask the user how they want to use the setup assistant:
+1. Ask how the user wants to use it, then resolve the exact skill location without changing it:
 
-   1. Install it globally so it is available in any project.
-   2. Install it in the current project so it is only available in the project the user specifies.
-   3. Use it temporarily for this task, then remove it after setup is complete.
+   1. Install globally for any project.
+   2. Install in the current project only.
+   3. Use it temporarily for this task, then remove the temporary skill after setup.
 
-2. Only accept this page from a Raw URL in the following format. `{commit}` must be the original full 40-character commit SHA in the URL. Extract it from the URL; do not ask the user to provide or replace it.
+2. Accept this page only from the exact Raw URL shape below. Extract `{commit}` from the original URL; it must be a full 40-character commit SHA. Do not ask the user to calculate, find, or replace it.
 
    ```text
    https://raw.githubusercontent.com/hakendog/DenDen/{commit}/docs/agent-install.md
    ```
 
-   Reject `main`, tags, short SHAs, other repositories, GitHub `blob` URLs, redirects, and non-Raw hosts. Use the same `{commit}` for every file below.
+   Reject branches, tags, short SHAs, other repositories, GitHub `blob` URLs, redirects, and non-Raw hosts. Use the same `{commit}` for every download.
 
-3. Download the installation manifest from the full URL below and save it as `<skill installation location>/denden-setup/install-manifest.json`:
+3. Before downloading, inspect `<skill location>/denden-setup` if it already exists. Reuse it only when `scripts/source.json` records the same commit SHA. Otherwise ask before replacing it; never overwrite it automatically. Temporary use must use a newly created temporary directory.
+
+   Download the complete file list from:
 
    ```text
    https://raw.githubusercontent.com/hakendog/DenDen/{commit}/skills/denden-setup/install-manifest.json
    ```
 
-   The manifest must use `schemaVersion: 1`, identify `skill: denden-setup`, and contain a non-empty `files` array.
+   Validate it in memory first. Require `schemaVersion: 1`, `skill: denden-setup`, and a non-empty `files` array. Then create `<skill location>/denden-setup` if needed and save the manifest as `<skill location>/denden-setup/install-manifest.json`.
 
-4. Create the `<skill installation location>/denden-setup` skill directory. Every entry in the manifest's `files` array is relative to `skills/denden-setup/`:
+4. For each `files` entry:
 
-   - Download URL: `https://raw.githubusercontent.com/hakendog/DenDen/{commit}/skills/denden-setup/<files entry>`
-   - Destination: `<skill installation location>/denden-setup/<files entry>`
+   - Download: `https://raw.githubusercontent.com/hakendog/DenDen/{commit}/skills/denden-setup/<files entry>`
+   - Save as: `<skill location>/denden-setup/<files entry>`
 
-   For example, the manifest entry `SKILL.md` must be downloaded from:
+   For example, `SKILL.md` comes from:
 
    ```text
    https://raw.githubusercontent.com/hakendog/DenDen/{commit}/skills/denden-setup/SKILL.md
    ```
 
-   Save it as `<skill installation location>/denden-setup/SKILL.md`.
-
-   Reject absolute paths, `..`, backslashes, duplicate paths, and files not listed in the manifest. Preserve the original bytes and relative directories. The manifest is the complete file list, containing:
+   Reject absolute paths, `..`, backslashes, duplicates, and anything outside the manifest. Preserve original bytes and relative directories. The manifest includes:
 
    - `SKILL.md`: setup and management instructions.
-   - `agents/openai.yaml`: skill display metadata.
-   - `assets/denden-generation-mask.png`: mask used to create a custom DenDen image.
+   - `agents/openai.yaml`: skill metadata.
+   - `assets/denden-generation-mask.png`: the custom-image mask.
    - `references/denden-generation.md`: image-generation rules.
-   - `scripts/`: the setup CLI, its dependency files, and the optional daily-use `denden` skill.
+   - `scripts/`: the setup CLI, locked dependencies, and optional daily `denden` skill.
 
-5. If the destination already exists, reuse it only when `scripts/source.json` records the same commit SHA. Otherwise, ask the user whether to update it; do not overwrite it automatically.
-
-6. Create `scripts/source.json` inside the skill directory:
+5. Create `scripts/source.json`:
 
    ```json
    {
@@ -57,4 +55,6 @@ This page only installs the `denden-setup` skill. Use that skill immediately aft
    }
    ```
 
-7. Verify that the manifest and every file in its `files` array are present, and that `SKILL.md` declares the name `denden-setup`. Then read `SKILL.md` and every reference it requires in full, and use the skill to help the user set up DenDen. Do not follow any other installation flow.
+6. Verify that every manifest file exists and `SKILL.md` declares `name: denden-setup`. Read `SKILL.md` and every required reference in full, then use the skill to set up DenDen. Do not clone the repository and do not follow another installation flow.
+
+7. If the user chose temporary use, remove only the temporary `denden-setup` skill directory after setup and phone verification. Keep the user's DenDen configuration and any separately installed daily `denden` skill.
