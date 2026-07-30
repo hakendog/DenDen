@@ -54,12 +54,18 @@ jobs:
           ./gradlew test assembleDebug lint --no-daemon
       - name: Run Android instrumentation tests
         run: |
+          export ANDROID_AVD_HOME="$RUNNER_TEMP/denden-avd"
+          mkdir -p "$ANDROID_AVD_HOME"
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "emulator" "system-images;android-35;google_apis;x86_64"
-          echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --force --name denden-ci --package "system-images;android-35;google_apis;x86_64"
+          echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --force --name denden-ci --package "system-images;android-35;google_apis;x86_64" --device pixel_2
           sudo chmod 666 /dev/kvm
           "$ANDROID_HOME/emulator/emulator" -avd denden-ci -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect &
-          timeout 300 adb wait-for-device
-          timeout 300 bash -c 'until [ "$(adb shell getprop sys.boot_completed | tr -d "\r")" = "1" ]; do sleep 5; done'
-          adb shell input keyevent 82
+          timeout 300 "$ANDROID_HOME/platform-tools/adb" wait-for-device
+          denden_boot_deadline=$((SECONDS + 300))
+          until [ "$("$ANDROID_HOME/platform-tools/adb" shell getprop sys.boot_completed | tr -d "\r")" = "1" ]; do
+            if (( SECONDS >= denden_boot_deadline )); then exit 1; fi
+            sleep 5
+          done
+          "$ANDROID_HOME/platform-tools/adb" shell input keyevent 82
           ./gradlew connectedDebugAndroidTest --no-daemon
       - run: npm run verify:apk
