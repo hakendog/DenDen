@@ -90,7 +90,7 @@ Public subcommands:
 - Sender identities: `sender-auth-plan`, `sender-auth`, `sender-verify`, `sender-revoke-plan`, `sender-revoke`
 - Pairing: `status`, `qr`, `qr-remove`, `rotate-plan`, `rotate`
 - Transfers and backups: `export sender|brand`, `import-plan sender`, `import sender|brand`
-- Appearance: `brand apply|resume|reset`
+- Appearance: `brand preview|apply|resume|reset`
 - Daily skill: `skill-plan`, `skill-install`
 - Administrative sign-in: `management-revoke-plan`, `management-revoke`
 

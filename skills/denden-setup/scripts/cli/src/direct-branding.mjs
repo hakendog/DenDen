@@ -1,5 +1,6 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
-import { dirname, join } from "node:path";
+import { writeFile } from "node:fs/promises";
+import { dirname, join, resolve } from "node:path";
 import { PNG } from "pngjs";
 import { directFcmDataSize, encryptDirectFcmBytes, encryptDirectFcmPayload } from "./direct-fcm-protocol.mjs";
 import {
@@ -10,7 +11,7 @@ import {
   validateDirectFirebasePublicConfig,
   validateSenderCredentialsDirectory,
 } from "./fcm-client.mjs";
-import { prepareDirectBrandImage, validateBackgroundColor, validateBrandColor } from "./direct-image.mjs";
+import { createWhiteBrandPreview, prepareDirectBrandImage, validateBackgroundColor, validateBrandColor } from "./direct-image.mjs";
 import { readJson, userConfigPath, writePrivateJson } from "./config.mjs";
 
 const MAX_IMAGE_BYTES = 64 * 1024;
@@ -206,10 +207,23 @@ export function validateBrandConfig(value) {
 
 export async function runDirectBrandCommand(argv, context = {}) {
   const action = argv[0];
-  if (!new Set(["apply", "reset", "resume"]).has(action)) {
-    throw new Error("用法：denden setup brand <apply|reset|resume>");
+  if (!new Set(["preview", "apply", "reset", "resume"]).has(action)) {
+    throw new Error("用法：denden setup brand <preview|apply|reset|resume>");
   }
   const options = parseOptions(argv.slice(1));
+  if (action === "preview") {
+    const sourcePath = resolve(required(options.image, "--image"));
+    const outputPath = resolve(required(options.output, "--output"));
+    if (sourcePath === outputPath) throw new Error("白底預覽不能覆寫透明原圖");
+    const preview = await (context.createWhitePreview || createWhiteBrandPreview)(sourcePath);
+    await (context.writeFile || writeFile)(outputPath, preview, { flag: "wx" });
+    return {
+      action,
+      sourcePath,
+      outputPath,
+      next: "請顯示白底預覽；使用者採用後，直接將 sourcePath 的透明 PNG 傳給 brand apply，不得重新生成",
+    };
+  }
   const dailyPath = options["config-path"] || userConfigPath(context.env);
   const configPath = options["brand-config-path"] || join(dirname(dailyPath), "brand-config.json");
   const pendingPath = options["pending-path"] || join(dirname(configPath), "brand-pending.json");

@@ -26,6 +26,18 @@ export async function prepareDirectBrandImage(inputPath) {
   throw new Error("遠端品牌 PNG 無法壓縮到 64 KiB 內");
 }
 
+export async function createWhiteBrandPreview(inputPath) {
+  const image = PNG.sync.read(await prepareDirectBrandImage(inputPath));
+  for (let index = 0; index < image.data.length; index += 4) {
+    const alpha = image.data[index + 3] / 255;
+    for (let channel = 0; channel < 3; channel += 1) {
+      image.data[index + channel] = Math.round(image.data[index + channel] * alpha + 255 * (1 - alpha));
+    }
+    image.data[index + 3] = 255;
+  }
+  return PNG.sync.write(image);
+}
+
 function quantize(source, bits) {
   const result = new PNG({ width: source.width, height: source.height });
   result.data.set(source.data);

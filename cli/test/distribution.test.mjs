@@ -254,7 +254,7 @@ test("public docs and install bootstrap stay official, pinned, and registry-inde
   assert.match(setup, /Never read or decode the code, convert it to base64 or a data URL, upload it/);
   assert.match(setup, /read `references\/denden-generation\.md` in full/);
   assert.match(setup, /only generation contract/);
-  assert.match(generation, /only reference sent to an image service is `assets\/denden-generation-mask\.png`/);
+  assert.match(generation, /only generation reference sent to an image service is `assets\/denden-generation-mask\.png`/);
   assert.doesNotMatch(generation, /denden-family-[a-z-]+\.png/);
   assert.match(generation, /equal probability/);
   assert.match(generation, /Cute Courier/);
@@ -277,12 +277,17 @@ test("public docs and install bootstrap stay official, pinned, and registry-inde
   assert.match(generation, /two or three levels of vector shading/);
   assert.match(generation, /original PNG/);
   assert.match(generation, /transparent background, square canvas, complete centered subject, and safe margins/);
+  assert.match(generation, /The transparent PNG is the candidate and final source/);
+  assert.match(generation, /setup brand preview --image <transparent-png> --output <new-white-preview-png>/);
+  assert.match(generation, /After acceptance, do not call an image service, regenerate, restyle, or remove the background again/);
   assert.match(generation, /absolute path to `assets\/denden-generation-mask\.png`/);
   assert.match(generation, /at most `N` image-service calls/);
   assert.match(setup, /If no image tool is available, follow the reference's manual handoff/);
   assert.match(setupGuideZh, /AI 助理本身無法產生圖片時.*完整提示詞與參考遮罩的位置/);
   assert.doesNotMatch(generation, /禁止[^。\n]*漸層/);
   assert.match(setup, /Apply only after explicit acceptance/);
+  assert.match(setup, /Finish and validate the transparent PNG before asking for acceptance/);
+  assert.match(setup, /using the exact transparent source path returned by `brand preview`/);
   assert.match(setup, /--background-color/);
   assert.doesNotMatch(setup, /gradlew|connectedDebugAndroidTest|adb devices/i);
 });

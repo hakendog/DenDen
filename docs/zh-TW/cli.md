@@ -90,7 +90,7 @@ denden setup --help
 - 發送身分：`sender-auth-plan`、`sender-auth`、`sender-verify`、`sender-revoke-plan`、`sender-revoke`
 - 配對：`status`、`qr`、`qr-remove`、`rotate-plan`、`rotate`
 - 轉移與備份：`export sender|brand`、`import-plan sender`、`import sender|brand`
-- 外觀：`brand apply|resume|reset`
+- 外觀：`brand preview|apply|resume|reset`
 - 日常技能：`skill-plan`、`skill-install`
 - 管理登入：`management-revoke-plan`、`management-revoke`
 

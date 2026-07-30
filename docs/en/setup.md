@@ -77,7 +77,7 @@ During installation, you can:
 - Import a transparent PNG image.
 - Use the default image and change it later.
 
-If an external image service needs to receive any material, the setup assistant tells you what will be uploaded and waits for your approval.
+If an external image service needs to receive any material, the setup assistant tells you what will be uploaded and waits for your approval. Generated artwork is made transparent first, then composited onto white locally for review. Choosing to adopt that preview applies the same transparent artwork; it does not generate the image again.
 
 ### 6. Review the setup summary
 

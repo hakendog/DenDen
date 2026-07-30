@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { PNG } from "pngjs";
 import { buildBrandReset, buildBrandTransfer, runDirectBrandCommand, sendBrandMessages } from "../src/direct-branding.mjs";
 import { writePrivateJson } from "../src/config.mjs";
@@ -10,6 +10,24 @@ import { decryptDirectFcmPayload } from "../src/direct-fcm-protocol.mjs";
 import { TEST_BRAND_CONFIG } from "./fixtures.mjs";
 
 const config = TEST_BRAND_CONFIG;
+
+test("brand preview stays local and keeps the transparent source", async () => {
+  let written;
+  const result = await runDirectBrandCommand([
+    "preview", "--image", "candidate.png", "--output", "candidate-white.png",
+  ], {
+    createWhitePreview: async (path) => {
+      assert.equal(path, resolve("candidate.png"));
+      return Buffer.from("white-preview");
+    },
+    writeFile: async (path, bytes, options) => { written = { path, bytes, options }; },
+  });
+  assert.equal(result.sourcePath, resolve("candidate.png"));
+  assert.equal(result.outputPath, resolve("candidate-white.png"));
+  assert.equal(written.path, result.outputPath);
+  assert.equal(written.bytes.toString(), "white-preview");
+  assert.deepEqual(written.options, { flag: "wx" });
+});
 
 test("brand transfer encrypts one bounded manifest and chunks with brand authority", async () => {
   const image = new PNG({ width: 512, height: 512 });
