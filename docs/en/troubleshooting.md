@@ -5,7 +5,7 @@ If you have an installation, pairing, or notification problem, copy the entire b
 ```text
 Please follow this DenDen installation guide to load the setup assistant, then check or repair DenDen. This is what I see: <describe the problem>
 
-https://raw.githubusercontent.com/hakendog/DenDen/a610039ca3e324612508654c00b3c874fefc5791/docs/agent-install.md
+https://raw.githubusercontent.com/hakendog/DenDen/26a9298d199d4c65b547288d36166a628d80b628/docs/agent-install.md
 ```
 
 The setup assistant reads the current state first. It will not immediately rebuild the project, clear phone data, or overwrite settings.

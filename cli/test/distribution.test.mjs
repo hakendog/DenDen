@@ -13,7 +13,7 @@ import {
 
 const root = process.cwd();
 const execFileAsync = promisify(execFile);
-const installGuideUrl = "https://raw.githubusercontent.com/hakendog/DenDen/a610039ca3e324612508654c00b3c874fefc5791/docs/agent-install.md";
+const installGuideUrl = "https://raw.githubusercontent.com/hakendog/DenDen/26a9298d199d4c65b547288d36166a628d80b628/docs/agent-install.md";
 
 test("CLI exposes the direct FCM runtime contract without an Automation credential", async () => {
   const { stdout } = await execFileAsync(process.execPath, [join(root, "cli/bin/denden.mjs"), "capabilities"], { cwd: root });
