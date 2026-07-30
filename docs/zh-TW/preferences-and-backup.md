@@ -11,7 +11,7 @@
 ```text
 請先根據以下 DenDen 安裝引導載入設定助手，再為目前的 AI 助理安裝 DenDen 日常通知功能：
 
-https://raw.githubusercontent.com/hakendog/DenDen/7078961e3d1a89ef3e52dba3c242104e9eb81f2c/docs/agent-install.md
+https://raw.githubusercontent.com/hakendog/DenDen/b73bc3dd3c6b3be5160be4caa4a6fd49991dfd6b/docs/agent-install.md
 ```
 
 安裝時可以重新選擇哪些工作結果需要通知。日常通知功能只能傳送通知，不能管理 Google 專案、重新配對手機或更換圖片。

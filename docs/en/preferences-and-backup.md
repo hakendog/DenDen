@@ -11,7 +11,7 @@ Copy the entire block below and paste it into that AI assistant:
 ```text
 Please follow this DenDen installation guide to load the setup assistant, then install the daily DenDen notification feature for this AI assistant:
 
-https://raw.githubusercontent.com/hakendog/DenDen/7078961e3d1a89ef3e52dba3c242104e9eb81f2c/docs/agent-install.md
+https://raw.githubusercontent.com/hakendog/DenDen/b73bc3dd3c6b3be5160be4caa4a6fd49991dfd6b/docs/agent-install.md
 ```
 
 Choose which task results should notify you during installation. Daily notifications can only send notifications. They cannot manage the Google project, pair a phone again, or change the DenDen image.
