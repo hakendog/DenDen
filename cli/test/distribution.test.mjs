@@ -13,7 +13,7 @@ import {
 
 const root = process.cwd();
 const execFileAsync = promisify(execFile);
-const installGuideUrl = "https://raw.githubusercontent.com/hakendog/DenDen/c2f7e66fb8c3c0daeeace2f9ce46027706f24976/docs/agent-install.md";
+const installGuideUrl = "https://raw.githubusercontent.com/hakendog/DenDen/6aa2612514f69e4328da4781be84f3c54b510d1b/docs/agent-install.md";
 
 test("CLI exposes the direct FCM runtime contract without an Automation credential", async () => {
   const { stdout } = await execFileAsync(process.execPath, [join(root, "cli/bin/denden.mjs"), "capabilities"], { cwd: root });
@@ -271,22 +271,27 @@ test("public docs and install bootstrap stay official, pinned, and registry-inde
   assert.match(generation, /HARD CONSTRAINTS/);
   assert.match(generation, /FINALIZED DESIGN/);
   assert.match(generation, /STYLE/);
-  assert.match(generation, /Each image-service call produces exactly one visible image/);
+  assert.match(generation, /Each candidate-generation call produces exactly one visible image/);
   assert.match(generation, /Polished 2D vector mascot/);
   assert.match(generation, /deep-navy or near-black outer stroke/);
   assert.match(generation, /two or three levels of vector shading/);
   assert.match(generation, /original PNG/);
-  assert.match(generation, /transparent background, square canvas, complete centered subject, and safe margins/);
+  assert.match(generation, /flat removal matte, square canvas, complete centered subject, safe margins/);
   assert.match(generation, /The transparent PNG is the candidate and final source/);
+  assert.match(generation, /One flat removal-matte color by name and exact `#RRGGBB`/);
+  assert.match(generation, /must be absent from the face, both eyes, tentacles, outlines, highlights, shadows, shell, body, accessories, and effects/);
+  assert.match(generation, /exactly two complete facial eyes/);
+  assert.match(generation, /redo background removal from the same matted source instead of regenerating the character/);
   assert.match(generation, /setup brand preview --image <transparent-png> --output <new-white-preview-png>/);
   assert.match(generation, /After acceptance, do not call an image service, regenerate, restyle, or remove the background again/);
   assert.match(generation, /absolute path to `assets\/denden-generation-mask\.png`/);
-  assert.match(generation, /at most `N` image-service calls/);
+  assert.match(generation, /at most `N` candidate-generation calls/);
   assert.match(setup, /If no image tool is available, follow the reference's manual handoff/);
   assert.match(setupGuideZh, /AI 助理本身無法產生圖片時.*完整提示詞與參考遮罩的位置/);
   assert.doesNotMatch(generation, /禁止[^。\n]*漸層/);
   assert.match(setup, /Apply only after explicit acceptance/);
   assert.match(setup, /Finish and validate the transparent PNG before asking for acceptance/);
+  assert.match(setup, /reject it if either complete facial eye or any other foreground detail changed/);
   assert.match(setup, /using the exact transparent source path returned by `brand preview`/);
   assert.match(setup, /--background-color/);
   assert.doesNotMatch(setup, /gradlew|connectedDebugAndroidTest|adb devices/i);
