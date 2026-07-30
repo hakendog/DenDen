@@ -45,7 +45,7 @@ The screenshots use fictional data.
    ```text
    Please follow this DenDen installation guide and help me install and set up DenDen:
 
-   https://raw.githubusercontent.com/hakendog/DenDen/c2f7e66fb8c3c0daeeace2f9ce46027706f24976/docs/agent-install.md
+   https://raw.githubusercontent.com/hakendog/DenDen/6aa2612514f69e4328da4781be84f3c54b510d1b/docs/agent-install.md
    ```
 
 4. The AI assistant checks your computer and shows a summary before making changes.
