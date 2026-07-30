@@ -86,6 +86,22 @@ test("DenDen distribution uses verified source instead of npm publication", asyn
   }
 });
 
+test("AI-facing product instructions use English source", async () => {
+  const files = [
+    "docs/agent-install.md",
+    "integrations/claude-code/CLAUDE.snippet.md",
+    "integrations/gemini-cli/GEMINI.snippet.md",
+    "skills/denden/SKILL.md",
+    "skills/denden/agents/openai.yaml",
+    "skills/denden-setup/SKILL.md",
+    "skills/denden-setup/agents/openai.yaml",
+    "skills/denden-setup/references/denden-generation.md",
+  ];
+  for (const file of files) {
+    assert.doesNotMatch(await readFile(join(root, file), "utf8"), /\p{Script=Han}/u, `${file} must use English source`);
+  }
+});
+
 test("public license, identity, version, and security metadata stay aligned", async () => {
   const license = (await readFile(join(root, "LICENSE"), "utf8")).replaceAll("\r\n", "\n").trim();
   assert.equal(createHash("sha256").update(license).digest("hex"), "283ea6cc2997a1a70da0049e09adf9317bb60ca1b51279b65196b83a69e1996b");

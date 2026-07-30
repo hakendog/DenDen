@@ -32,6 +32,7 @@ Do not uninstall the app or clear its data to bypass `INSTALL_FAILED_UPDATE_INCO
 - Explain the user-visible problem and the smallest change that solves it.
 - Add or update one runnable regression test for behavior changes.
 - Update English and Traditional Chinese user documentation when behavior changes.
+- Keep AI-facing source documents in English, including skills, agent installation instructions, bundled references, integration snippets, and agent metadata. Localize user-facing interaction at runtime instead of maintaining translated machine instructions.
 - Keep `stop` limited to stopping a phone alarm; it must never stop the source task.
 - Never infer permission to ring. Only explicit user authority may enable an alarm.
 - Never commit Google credentials, ADC, private FCM topics, pairing keys, QR contents, FCM tokens, user data, or release-signing material.
