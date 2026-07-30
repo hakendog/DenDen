@@ -1,0 +1,50 @@
+{
+  "nowMillis": 1800000000000,
+  "invite": {
+    "v": 2,
+    "projectId": "denden-demo-123",
+    "firebaseAppId": "1:123456789012:android:0123456789abcdef",
+    "apiKey": "AIzaSyDendenProtocolTestOnly000000000",
+    "gcmSenderId": "123456789012",
+    "androidPackageName": "com.tensal.denden",
+    "pairingId": "AAECAwQFBgcICQoLDA0ODw",
+    "topic": "ICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj8",
+    "eventKeyId": "event-key-000001",
+    "eventKey": "QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl8",
+    "brandKeyId": "brand-key-000001",
+    "brandKey": "YGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn8",
+    "createdAtMillis": 1800000000000,
+    "displayExpiresAtMillis": 1800000600000
+  },
+  "encodedInvite": "DDC.eyJ2IjoyLCJwcm9qZWN0SWQiOiJkZW5kZW4tZGVtby0xMjMiLCJmaXJlYmFzZUFwcElkIjoiMToxMjM0NTY3ODkwMTI6YW5kcm9pZDowMTIzNDU2Nzg5YWJjZGVmIiwiYXBpS2V5IjoiQUl6YVN5RGVuZGVuUHJvdG9jb2xUZXN0T25seTAwMDAwMDAwMCIsImdjbVNlbmRlcklkIjoiMTIzNDU2Nzg5MDEyIiwiYW5kcm9pZFBhY2thZ2VOYW1lIjoiY29tLnRlbnNhbC5kZW5kZW4iLCJwYWlyaW5nSWQiOiJBQUVDQXdRRkJnY0lDUW9MREEwT0R3IiwidG9waWMiOiJJQ0VpSXlRbEppY29LU29yTEMwdUx6QXhNak0wTlRZM09EazZPenc5UGo4IiwiZXZlbnRLZXlJZCI6ImV2ZW50LWtleS0wMDAwMDEiLCJldmVudEtleSI6IlFFRkNRMFJGUmtkSVNVcExURTFPVDFCUlVsTlVWVlpYV0ZsYVcxeGRYbDgiLCJicmFuZEtleUlkIjoiYnJhbmQta2V5LTAwMDAwMSIsImJyYW5kS2V5IjoiWUdGaVkyUmxabWRvYVdwcmJHMXViM0J4Y25OMGRYWjNlSGw2ZTN4OWZuOCIsImNyZWF0ZWRBdE1pbGxpcyI6MTgwMDAwMDAwMDAwMCwiZGlzcGxheUV4cGlyZXNBdE1pbGxpcyI6MTgwMDAwMDYwMDAwMH0",
+  "encryption": {
+    "plaintextJson": "{\"eventId\":\"event-0000000001\",\"mode\":\"notify\",\"title\":\"測試完成\",\"issuedAtMillis\":1800000000000,\"expiresAtMillis\":1800000300000}",
+    "input": {
+      "pairingId": "AAECAwQFBgcICQoLDA0ODw",
+      "kind": "event",
+      "keyKind": "event",
+      "keyId": "event-key-000001",
+      "messageId": "message-00000001",
+      "key": "QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl8",
+      "nonce": "gIGCg4SFhoeIiYqL",
+      "payload": {
+        "eventId": "event-0000000001",
+        "mode": "notify",
+        "title": "測試完成",
+        "issuedAtMillis": 1800000000000,
+        "expiresAtMillis": 1800000300000
+      }
+    },
+    "envelope": {
+      "v": "2",
+      "pairingId": "AAECAwQFBgcICQoLDA0ODw",
+      "kind": "event",
+      "keyKind": "event",
+      "keyId": "event-key-000001",
+      "messageId": "message-00000001",
+      "nonce": "gIGCg4SFhoeIiYqL",
+      "ciphertext": "VnzbsUcaXsoMSKoKF9TwTIzR-eJ9V9Ykzr5I5fM5QxF8WN_25tbDKHu7ocH4dCsTCZLBR5FmJCDHL6vLaWcfSapmDlrmmR8keZh8S1exZuZxsUiTyq-My0wUQWExObAAbOShmVv7PbnLUmlnzsZ9tu-bltea6TM-2bftUExdE__sRBc5zb6s9mcWIWJdXZXzQcZLoA"
+    },
+    "dataSizeBytes": 329
+  }
+}

@@ -1,0 +1,22 @@
+node_modules/
+lib/
+.env
+.env.*
+.denden.json
+.firebase/
+output/
+tmp/
+.signing/
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+
+# Gradle / Android build outputs
+.gradle/
+build/
+*.log
+secrets/
+.codex/*.local.toml

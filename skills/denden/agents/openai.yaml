@@ -1,0 +1,4 @@
+interface:
+  display_name: "DenDen"
+  short_description: "將標準化 Agent 工作結果安全回報到 DenDen Android 呼叫器"
+  default_prompt: "使用 $denden 將這次工作的實際結果回報到 DenDen。"

@@ -1,0 +1,455 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "2c7c8198c2e4f61423ebcbbecf8b5e4d",
+    "entities": [
+      {
+        "tableName": "events",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `eventId` TEXT NOT NULL, `action` TEXT NOT NULL, `title` TEXT, `message` TEXT, `durationSeconds` INTEGER, `tagsJson` TEXT, `channelId` TEXT NOT NULL, `channelName` TEXT, `notificationMode` TEXT NOT NULL, `ringUntilMillis` INTEGER, `kind` TEXT NOT NULL, `state` TEXT NOT NULL, `receivedAt` INTEGER NOT NULL, `issuedAtMillis` INTEGER NOT NULL, `startedAtMillis` INTEGER, `stoppedAtMillis` INTEGER, `stopReason` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "eventId",
+            "columnName": "eventId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "action",
+            "columnName": "action",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "message",
+            "columnName": "message",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "durationSeconds",
+            "columnName": "durationSeconds",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "tagsJson",
+            "columnName": "tagsJson",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "channelId",
+            "columnName": "channelId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "channelName",
+            "columnName": "channelName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "notificationMode",
+            "columnName": "notificationMode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ringUntilMillis",
+            "columnName": "ringUntilMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "state",
+            "columnName": "state",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "receivedAt",
+            "columnName": "receivedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "issuedAtMillis",
+            "columnName": "issuedAtMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startedAtMillis",
+            "columnName": "startedAtMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "stoppedAtMillis",
+            "columnName": "stoppedAtMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "stopReason",
+            "columnName": "stopReason",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_events_eventId",
+            "unique": true,
+            "columnNames": [
+              "eventId"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_events_eventId` ON `${TABLE_NAME}` (`eventId`)"
+          },
+          {
+            "name": "index_events_channelId_receivedAt_id",
+            "unique": false,
+            "columnNames": [
+              "channelId",
+              "receivedAt",
+              "id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_events_channelId_receivedAt_id` ON `${TABLE_NAME}` (`channelId`, `receivedAt`, `id`)"
+          }
+        ]
+      },
+      {
+        "tableName": "trashed_channels",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`channelId` TEXT NOT NULL, `trashedAtMillis` INTEGER NOT NULL, `purgeAtMillis` INTEGER NOT NULL, `cleanupState` TEXT NOT NULL, PRIMARY KEY(`channelId`))",
+        "fields": [
+          {
+            "fieldPath": "channelId",
+            "columnName": "channelId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "trashedAtMillis",
+            "columnName": "trashedAtMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "purgeAtMillis",
+            "columnName": "purgeAtMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cleanupState",
+            "columnName": "cleanupState",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "channelId"
+          ]
+        }
+      },
+      {
+        "tableName": "event_tags",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`eventRowId` INTEGER NOT NULL, `tag` TEXT NOT NULL, PRIMARY KEY(`eventRowId`, `tag`), FOREIGN KEY(`eventRowId`) REFERENCES `events`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "eventRowId",
+            "columnName": "eventRowId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tag",
+            "columnName": "tag",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "eventRowId",
+            "tag"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_event_tags_tag_eventRowId",
+            "unique": false,
+            "columnNames": [
+              "tag",
+              "eventRowId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_event_tags_tag_eventRowId` ON `${TABLE_NAME}` (`tag`, `eventRowId`)"
+          },
+          {
+            "name": "index_event_tags_eventRowId",
+            "unique": false,
+            "columnNames": [
+              "eventRowId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_event_tags_eventRowId` ON `${TABLE_NAME}` (`eventRowId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "events",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "eventRowId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "channel_state",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`channelId` TEXT NOT NULL, `lastReadAt` INTEGER NOT NULL, `archived` INTEGER NOT NULL, PRIMARY KEY(`channelId`))",
+        "fields": [
+          {
+            "fieldPath": "channelId",
+            "columnName": "channelId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastReadAt",
+            "columnName": "lastReadAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "archived",
+            "columnName": "archived",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "channelId"
+          ]
+        }
+      },
+      {
+        "tableName": "message_receipts",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`pairingId` TEXT NOT NULL, `messageId` TEXT NOT NULL, `kind` TEXT NOT NULL, `eventId` TEXT, `contentDigest` TEXT NOT NULL, `receivedAtMillis` INTEGER NOT NULL, `expiresAtMillis` INTEGER NOT NULL, PRIMARY KEY(`pairingId`, `messageId`))",
+        "fields": [
+          {
+            "fieldPath": "pairingId",
+            "columnName": "pairingId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "messageId",
+            "columnName": "messageId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "eventId",
+            "columnName": "eventId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "contentDigest",
+            "columnName": "contentDigest",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "receivedAtMillis",
+            "columnName": "receivedAtMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "expiresAtMillis",
+            "columnName": "expiresAtMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "pairingId",
+            "messageId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_message_receipts_eventId",
+            "unique": false,
+            "columnNames": [
+              "eventId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_message_receipts_eventId` ON `${TABLE_NAME}` (`eventId`)"
+          },
+          {
+            "name": "index_message_receipts_expiresAtMillis",
+            "unique": false,
+            "columnNames": [
+              "expiresAtMillis"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_message_receipts_expiresAtMillis` ON `${TABLE_NAME}` (`expiresAtMillis`)"
+          }
+        ]
+      },
+      {
+        "tableName": "pending_alerts",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`eventId` TEXT NOT NULL, `action` TEXT NOT NULL, `state` TEXT NOT NULL, `expiresAtMillis` INTEGER NOT NULL, `ringUntilMillis` INTEGER, `lastAttemptAtMillis` INTEGER, `degradedReason` TEXT, PRIMARY KEY(`eventId`))",
+        "fields": [
+          {
+            "fieldPath": "eventId",
+            "columnName": "eventId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "action",
+            "columnName": "action",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "state",
+            "columnName": "state",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "expiresAtMillis",
+            "columnName": "expiresAtMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ringUntilMillis",
+            "columnName": "ringUntilMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lastAttemptAtMillis",
+            "columnName": "lastAttemptAtMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "degradedReason",
+            "columnName": "degradedReason",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "eventId"
+          ]
+        }
+      },
+      {
+        "tableName": "stop_tombstones",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`eventId` TEXT NOT NULL, `pairingId` TEXT NOT NULL, `messageId` TEXT NOT NULL, `receivedAtMillis` INTEGER NOT NULL, `expiresAtMillis` INTEGER NOT NULL, `dispatchPending` INTEGER NOT NULL, PRIMARY KEY(`eventId`))",
+        "fields": [
+          {
+            "fieldPath": "eventId",
+            "columnName": "eventId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pairingId",
+            "columnName": "pairingId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "messageId",
+            "columnName": "messageId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "receivedAtMillis",
+            "columnName": "receivedAtMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "expiresAtMillis",
+            "columnName": "expiresAtMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dispatchPending",
+            "columnName": "dispatchPending",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "eventId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_stop_tombstones_expiresAtMillis",
+            "unique": false,
+            "columnNames": [
+              "expiresAtMillis"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_stop_tombstones_expiresAtMillis` ON `${TABLE_NAME}` (`expiresAtMillis`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2c7c8198c2e4f61423ebcbbecf8b5e4d')"
+    ]
+  }
+}

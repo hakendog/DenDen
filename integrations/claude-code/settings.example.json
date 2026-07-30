@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "__DENDEN_PERSISTENT_LAUNCHER__ integration hook",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

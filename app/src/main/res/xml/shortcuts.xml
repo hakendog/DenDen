@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="denden_quiet"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/bixby_quiet_short_label"
+        android:shortcutLongLabel="@string/bixby_quiet_long_label">
+        <intent
+            android:action="com.tensal.denden.action.BIXBY_QUIET"
+            android:targetClass="com.tensal.denden.automation.BixbyAutomationActivity"
+            android:targetPackage="com.tensal.denden" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="denden_notify"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/bixby_notify_short_label"
+        android:shortcutLongLabel="@string/bixby_notify_long_label">
+        <intent
+            android:action="com.tensal.denden.action.BIXBY_NOTIFY"
+            android:targetClass="com.tensal.denden.automation.BixbyAutomationActivity"
+            android:targetPackage="com.tensal.denden" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="denden_ring"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/bixby_ring_short_label"
+        android:shortcutLongLabel="@string/bixby_ring_long_label">
+        <intent
+            android:action="com.tensal.denden.action.BIXBY_RING"
+            android:targetClass="com.tensal.denden.automation.BixbyAutomationActivity"
+            android:targetPackage="com.tensal.denden" />
+    </shortcut>
+</shortcuts>

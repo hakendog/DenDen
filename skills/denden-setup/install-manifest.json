@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "skill": "denden-setup",
+  "files": [
+    "SKILL.md",
+    "agents/openai.yaml",
+    "assets/denden-generation-mask.png",
+    "references/denden-generation.md",
+    "scripts/cli/bin/denden.mjs",
+    "scripts/cli/src/commands.mjs",
+    "scripts/cli/src/config.mjs",
+    "scripts/cli/src/direct-branding.mjs",
+    "scripts/cli/src/direct-fcm-protocol.mjs",
+    "scripts/cli/src/direct-image.mjs",
+    "scripts/cli/src/direct-setup.mjs",
+    "scripts/cli/src/fcm-client.mjs",
+    "scripts/cli/src/integration-install.mjs",
+    "scripts/cli/src/integration.mjs",
+    "scripts/cli/src/policy.mjs",
+    "scripts/cli/src/portable-config.mjs",
+    "scripts/cli/src/process.mjs",
+    "scripts/cli/src/setup-operations.mjs",
+    "scripts/cli/src/setup-plan.mjs",
+    "scripts/cli/src/source.mjs",
+    "scripts/package-lock.json",
+    "scripts/package.json",
+    "scripts/skills/denden/SKILL.md",
+    "scripts/skills/denden/agents/openai.yaml",
+    "scripts/skills/denden/scripts/denden.mjs",
+    "scripts/skills/denden/scripts/runtime/commands.mjs",
+    "scripts/skills/denden/scripts/runtime/config.mjs",
+    "scripts/skills/denden/scripts/runtime/direct-fcm-protocol.mjs",
+    "scripts/skills/denden/scripts/runtime/fcm-client.mjs",
+    "scripts/skills/denden/scripts/runtime/policy.mjs",
+    "scripts/skills/denden/scripts/runtime/process.mjs"
+  ],
+  "generatedFiles": [
+    "scripts/source.json"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "hooks": {
+    "AfterAgent": [
+      {
+        "matcher": "AfterAgent",
+        "hooks": [
+          {
+            "type": "command",
+            "name": "DenDen task outcome",
+            "command": "__DENDEN_PERSISTENT_LAUNCHER__ integration hook",
+            "timeout": 10000,
+            "description": "Pass a standardized final task event to the shared DenDen policy engine"
+          }
+        ]
+      }
+    ]
+  }
+}

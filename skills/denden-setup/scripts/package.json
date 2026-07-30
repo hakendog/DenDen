@@ -1,0 +1,14 @@
+{
+  "name": "@tensal/denden",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "pngjs": "5.0.0",
+    "qrcode": "1.5.4"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "Apache-2.0"
+}
