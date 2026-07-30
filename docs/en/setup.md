@@ -30,7 +30,7 @@ Copy the entire block below and paste it into the AI assistant:
 ```text
 Please follow this DenDen installation guide and help me install and set up DenDen:
 
-https://raw.githubusercontent.com/hakendog/DenDen/26a9298d199d4c65b547288d36166a628d80b628/docs/agent-install.md
+https://raw.githubusercontent.com/hakendog/DenDen/c2f7e66fb8c3c0daeeace2f9ce46027706f24976/docs/agent-install.md
 ```
 
 The AI assistant reads the installation guide, loads the DenDen setup assistant, and starts checking the computer.

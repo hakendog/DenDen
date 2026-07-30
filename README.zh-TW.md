@@ -45,7 +45,7 @@ DenDen 是一套 Android 通知系統，讓電腦、AI 助理與手機自動化�
    ```text
    請根據以下 DenDen 安裝引導，協助我完成安裝與設定：
 
-   https://raw.githubusercontent.com/hakendog/DenDen/26a9298d199d4c65b547288d36166a628d80b628/docs/agent-install.md
+   https://raw.githubusercontent.com/hakendog/DenDen/c2f7e66fb8c3c0daeeace2f9ce46027706f24976/docs/agent-install.md
    ```
 
 4. AI 助理會檢查電腦環境，並在進行變更前顯示摘要。

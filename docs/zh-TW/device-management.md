@@ -37,7 +37,7 @@
 ```text
 請先根據以下 DenDen 安裝引導載入設定助手，再匯出一般通知設定，讓我在另一台電腦使用：
 
-https://raw.githubusercontent.com/hakendog/DenDen/26a9298d199d4c65b547288d36166a628d80b628/docs/agent-install.md
+https://raw.githubusercontent.com/hakendog/DenDen/c2f7e66fb8c3c0daeeace2f9ce46027706f24976/docs/agent-install.md
 ```
 
 接著依序完成：
@@ -50,7 +50,7 @@ https://raw.githubusercontent.com/hakendog/DenDen/26a9298d199d4c65b547288d36166a
    ```text
    請先根據以下 DenDen 安裝引導載入設定助手，再匯入我提供的一般通知設定，驗證共用發送權限，並安裝 DenDen 日常通知功能：
 
-   https://raw.githubusercontent.com/hakendog/DenDen/26a9298d199d4c65b547288d36166a628d80b628/docs/agent-install.md
+   https://raw.githubusercontent.com/hakendog/DenDen/c2f7e66fb8c3c0daeeace2f9ce46027706f24976/docs/agent-install.md
    ```
 
 5. 選擇剛才的轉移包；不需要輸入密碼。
