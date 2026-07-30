@@ -37,7 +37,7 @@ First classify image-related requests:
 - Only explicit mention of a QR code, pairing code, or new receiving phone/device uses option 3.
 - If “regenerate” has no object, ask whether the user means the DenDen image or pairing code.
 
-Run a read-only status check, then offer:
+Run a read-only status check. Always display all nine numbered choices below verbatim before asking for a selection, even when one option is clearly relevant or recommended. Never omit labels, show only the recommended option, or replace the remaining choices with a bare “1–9” range.
 
 1. First-time installation and pairing.
 2. Check or repair management/daily authorization.

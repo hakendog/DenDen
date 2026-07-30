@@ -294,6 +294,7 @@ test("public docs and install bootstrap stay official, pinned, and registry-inde
   assert.match(setup, /reject it if either complete facial eye or any other foreground detail changed/);
   assert.match(setup, /using the exact transparent source path returned by `brand preview`/);
   assert.match(setup, /Missing `brand-config\.json` in an otherwise valid legacy sender setup is repairable/);
+  assert.match(setup, /Always display all nine numbered choices below verbatim/);
   assert.match(setup, /--background-color/);
   assert.doesNotMatch(setup, /gradlew|connectedDebugAndroidTest|adb devices/i);
 });
