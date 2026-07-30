@@ -18,6 +18,7 @@ import com.tensal.denden.branding.DirectBrandStore
 import com.tensal.denden.protocol.DirectFcmInvite
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeout
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -86,19 +87,19 @@ fun scheduleDirectPairing(context: Context) {
 suspend fun resumeDirectPairing(
     context: Context,
     store: DirectPairingStore = DirectPairingStore(context)
-) {
+): Unit = runDirectPairingAttempt {
     var snapshot = store.snapshot()
     if (snapshot.state == PairingState.ERROR) {
         check(store.retryError(snapshot.localPairingRevision)) { "配對錯誤狀態無法重試" }
         snapshot = store.snapshot()
     }
-    if (snapshot.state != PairingState.PENDING) return
+    if (snapshot.state != PairingState.PENDING) return@runDirectPairingAttempt
     val revision = snapshot.localPairingRevision
     if (snapshot.phase == PairingPhase.CLEANUP) {
         snapshot.cleanup?.let { cleanupSubscription(context, it, store, revision) }
         check(store.markCleanupComplete(revision)) { "配對版本已變更" }
         snapshot = store.snapshot()
-        if (snapshot.state == PairingState.UNPAIRED) return
+        if (snapshot.state == PairingState.UNPAIRED) return@runDirectPairingAttempt
     }
     val candidate = snapshot.candidate ?: throw IllegalStateException("缺少待訂閱配對")
     requireCurrent(store, revision, PairingPhase.SUBSCRIBE)
@@ -106,12 +107,17 @@ suspend fun resumeDirectPairing(
     val messaging = FirebaseMessaging.getInstance()
     messaging.isAutoInitEnabled = true
     messaging.subscribeToTopic(candidate.topic).awaitTask()
-    directRuntimeMutex.withLock {
-        requireCurrent(store, revision, PairingPhase.SUBSCRIBE)
-        DirectBrandStore(context).activatePairing(candidate.pairingId)
-        check(store.markActive(revision)) { "配對版本已變更" }
-    }
+    requireCurrent(store, revision, PairingPhase.SUBSCRIBE)
+    DirectBrandStore(context).activatePairing(candidate.pairingId)
+    check(store.markActive(revision)) { "配對版本已變更" }
 }
+
+internal suspend fun <T> runDirectPairingAttempt(
+    timeoutMillis: Long = DIRECT_PAIRING_ATTEMPT_TIMEOUT_MILLIS,
+    block: suspend () -> T
+): T = withTimeout(timeoutMillis) { directRuntimeMutex.withLock { block() } }
+
+private const val DIRECT_PAIRING_ATTEMPT_TIMEOUT_MILLIS = 30_000L
 
 suspend fun resubscribeActiveDirectPairing(
     context: Context,

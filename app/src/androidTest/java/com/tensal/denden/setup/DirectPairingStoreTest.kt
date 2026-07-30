@@ -14,6 +14,7 @@ import java.security.KeyStore
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 @RunWith(AndroidJUnit4::class)
 class DirectPairingStoreTest {
@@ -121,6 +122,24 @@ class DirectPairingStoreTest {
         } finally {
             workers.shutdownNow()
         }
+    }
+
+    @Test
+    fun stateObserverReportsBackgroundActivation() {
+        val name = "direct-pairing-observer-${UUID.randomUUID()}"
+        val store = DirectPairingStore(context, name)
+        val activated = CountDownLatch(1)
+        val stop = store.observeState {
+            if (store.snapshot().state == PairingState.ACTIVE) activated.countDown()
+        }
+        val revision = store.stage(invite("AAECAwQFBgcICQoLDA0ODw"))
+
+        assertTrue(store.markActive(revision))
+        assertTrue(activated.await(2, TimeUnit.SECONDS))
+
+        stop()
+        val clearRevision = store.beginClear()
+        assertTrue(store.markCleanupComplete(clearRevision))
     }
 
     private fun invite(pairingId: String) = DirectFcmInvite(

@@ -162,6 +162,7 @@ class MainActivity : ComponentActivity() {
     private val pairingAttemptGuard = PairingAttemptGuard()
     private val pairingAttemptMutex = Mutex()
     private var pairingJob: Job? = null
+    private var stopObservingPairingState: (() -> Unit)? = null
     private var brandReceiverRegistered = false
     private val brandChangedReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -456,18 +457,7 @@ class MainActivity : ComponentActivity() {
             }
             if (!isActive || !pairingAttemptGuard.isCurrent(attempt)) return@launchPairingAttempt
             result.onSuccess {
-                pendingDirectInvite = null
-                inviteInput = ""
-                setupStep = SetupStep.WELCOME
-                setupDisplayState = SetupDisplayState()
-                isPaired = true
-                forceSetup = false
-                directProjectId = invite.projectId
-                window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-                cachedBranding = directBrandingStore.load()
-                pendingBrandCandidate = null
-                directBrandStatus = directBrandingStore.status()
-                refreshReadiness()
+                showActivePairing()
             }.onFailure {
                 setupDisplayState = SetupDisplayState(
                     status = getString(R.string.pairing_failed_retry)
@@ -528,6 +518,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
+        if (stopObservingPairingState == null) {
+            stopObservingPairingState = directPairingStore.observeState {
+                runOnUiThread {
+                    if (!isPaired && directPairingStore.snapshot().state == PairingState.ACTIVE) showActivePairing()
+                }
+            }
+        }
         if (!brandReceiverRegistered) {
             ContextCompat.registerReceiver(
                 this,
@@ -545,6 +542,8 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onStop() {
+        stopObservingPairingState?.invoke()
+        stopObservingPairingState = null
         if (brandReceiverRegistered) {
             unregisterReceiver(brandChangedReceiver)
             brandReceiverRegistered = false
@@ -670,6 +669,16 @@ class MainActivity : ComponentActivity() {
         directBrandStatus = if (isPaired) directBrandingStore.status() else null
         if (isPaired || (localModeEnabled && !forceSetup)) window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
         else window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+    }
+
+    private fun showActivePairing() {
+        pendingDirectInvite = null
+        inviteInput = ""
+        setupStep = SetupStep.WELCOME
+        setupDisplayState = SetupDisplayState()
+        forceSetup = false
+        refreshStoredPairingState()
+        refreshReadiness()
     }
 
     private fun useLocalMode() {

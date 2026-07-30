@@ -146,6 +146,14 @@ class DirectPairingStore(context: Context, preferencesName: String = PREFS) {
         return revision
     }
 
+    fun observeState(onChange: () -> Unit): () -> Unit {
+        val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == STATE_KEY) onChange()
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        return { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
+
     fun snapshot(): DirectPairingSnapshot = synchronized(STORE_LOCK) {
         fun invite(key: String, revisionKey: String): DirectFcmInvite? = prefs.getString(key, null)?.let { encrypted ->
             val storedRevision = prefs.getLong(revisionKey, prefs.getLong(REVISION_KEY, 0))
