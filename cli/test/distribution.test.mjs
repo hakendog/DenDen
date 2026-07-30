@@ -116,7 +116,7 @@ test("daily skill cannot gain backend or repository ring authority", async () =>
   assert.doesNotMatch(skill, /agent-skills-sync|git pull/i);
 });
 
-test("Traditional Chinese docs and install bootstrap stay official, pinned, and registry-independent", async () => {
+test("English-first docs and install bootstrap stay official, pinned, and registry-independent", async () => {
   const readmeEn = await readFile(join(root, "README.md"), "utf8");
   const readmeZh = await readFile(join(root, "README.zh-TW.md"), "utf8");
   const setupGuideEn = await readFile(join(root, "docs/en/setup.md"), "utf8");
@@ -127,18 +127,21 @@ test("Traditional Chinese docs and install bootstrap stay official, pinned, and 
   const indexEn = await readFile(join(root, "docs/en/index.md"), "utf8");
   const cliGuide = await readFile(join(root, "docs/zh-TW/cli.md"), "utf8");
   const zhStrings = await readFile(join(root, "app/src/main/res/values-zh-rTW/strings.xml"), "utf8");
+  const docsIndex = await readFile(join(root, "docs/README.md"), "utf8");
   const guide = await readFile(join(root, "docs/agent-install.md"), "utf8");
   const setup = await readFile(join(root, "skills/denden-setup/SKILL.md"), "utf8");
   const generation = await readFile(join(root, "skills/denden-setup/references/denden-generation.md"), "utf8");
-  assert.doesNotMatch(guide, /<40 碼完整 commit SHA>/);
+  assert.match(docsIndex, /English is the canonical language for DenDen documentation/);
+  assert.doesNotMatch(`${docsIndex}\n${guide}`, /\p{Script=Han}/u);
+  assert.doesNotMatch(guide, /<full 40-character commit SHA>/i);
   assert.match(guide, /raw\.githubusercontent\.com\/hakendog\/DenDen\/\{commit\}\/docs\/agent-install\.md/);
   assert.match(guide, /raw\.githubusercontent\.com\/hakendog\/DenDen\/\{commit\}\/skills\/denden-setup\/install-manifest\.json/);
-  assert.match(guide, /相對於 `skills\/denden-setup\/`/);
+  assert.match(guide, /relative to `skills\/denden-setup\/`/);
   assert.match(guide, /denden-setup\/SKILL\.md/);
-  assert.match(guide, /安裝到全域/);
-  assert.match(guide, /安裝到目前專案/);
-  assert.match(guide, /僅本次暫時使用/);
-  assert.match(guide, /立即使用該技能/);
+  assert.match(guide, /Install it globally/);
+  assert.match(guide, /Install it in the current project/);
+  assert.match(guide, /Use it temporarily for this task/);
+  assert.match(guide, /Use that skill immediately/);
   assert.doesNotMatch(guide, /git clone|DenDen\.git|setup install/i);
   assert.match(setup, /scripts\/cli\/bin\/denden\.mjs/);
   assert.doesNotMatch(setup, /docs\/agent-install\.md|持久啟動器|DENDEN_INSTALL_ROOT/);

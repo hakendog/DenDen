@@ -1,53 +1,53 @@
-# 安裝 DenDen 設定助手
+# Install the DenDen setup assistant
 
-本頁只負責安裝 `denden-setup` 技能。完成後立即使用該技能。
+This page only installs the `denden-setup` skill. Use that skill immediately after installation.
 
-1. 詢問使用者要如何使用設定助手：
+1. Ask the user how they want to use the setup assistant:
 
-   1. 安裝到全域，之後可在任何專案使用。
-   2. 安裝到目前專案，只在使用者指定的專案使用。
-   3. 僅本次暫時使用，完成本次設定後刪除。
+   1. Install it globally so it is available in any project.
+   2. Install it in the current project so it is only available in the project the user specifies.
+   3. Use it temporarily for this task, then remove it after setup is complete.
 
-2. 只接受符合下列格式的本頁 Raw 網址。`{commit}` 必須是網址中原有的 40 碼完整 commit SHA；由 AI 助理自行讀取，不要要求使用者提供或替換。
+2. Only accept this page from a Raw URL in the following format. `{commit}` must be the original full 40-character commit SHA in the URL. Extract it from the URL; do not ask the user to provide or replace it.
 
    ```text
    https://raw.githubusercontent.com/hakendog/DenDen/{commit}/docs/agent-install.md
    ```
 
-   拒絕 `main`、標籤、短 SHA、其他 repository、GitHub `blob` 網址、重新導向及非 Raw 主機。後續所有檔案必須使用同一個 `{commit}`。
+   Reject `main`, tags, short SHAs, other repositories, GitHub `blob` URLs, redirects, and non-Raw hosts. Use the same `{commit}` for every file below.
 
-3. 從下列完整網址下載安裝清單，並儲存為 `<技能安裝位置>/denden-setup/install-manifest.json`：
+3. Download the installation manifest from the full URL below and save it as `<skill installation location>/denden-setup/install-manifest.json`:
 
    ```text
    https://raw.githubusercontent.com/hakendog/DenDen/{commit}/skills/denden-setup/install-manifest.json
    ```
 
-   清單必須使用 `schemaVersion: 1`、`skill: denden-setup`，並包含非空的 `files` 陣列。
+   The manifest must use `schemaVersion: 1`, identify `skill: denden-setup`, and contain a non-empty `files` array.
 
-4. 建立 `<技能安裝位置>/denden-setup` 技能資料夾。清單 `files` 中的每個項目都是相對於 `skills/denden-setup/` 的路徑：
+4. Create the `<skill installation location>/denden-setup` skill directory. Every entry in the manifest's `files` array is relative to `skills/denden-setup/`:
 
-   - 下載網址：`https://raw.githubusercontent.com/hakendog/DenDen/{commit}/skills/denden-setup/<files 項目>`
-   - 儲存位置：`<技能安裝位置>/denden-setup/<files 項目>`
+   - Download URL: `https://raw.githubusercontent.com/hakendog/DenDen/{commit}/skills/denden-setup/<files entry>`
+   - Destination: `<skill installation location>/denden-setup/<files entry>`
 
-   例如清單中的 `SKILL.md` 必須從：
+   For example, the manifest entry `SKILL.md` must be downloaded from:
 
    ```text
    https://raw.githubusercontent.com/hakendog/DenDen/{commit}/skills/denden-setup/SKILL.md
    ```
 
-   儲存為 `<技能安裝位置>/denden-setup/SKILL.md`。
+   Save it as `<skill installation location>/denden-setup/SKILL.md`.
 
-   拒絕絕對路徑、`..`、反斜線、重複路徑及清單外的檔案；保留原始位元組與相對目錄。完整檔名以清單為準，內容分為：
+   Reject absolute paths, `..`, backslashes, duplicate paths, and files not listed in the manifest. Preserve the original bytes and relative directories. The manifest is the complete file list, containing:
 
-   - `SKILL.md`：設定與管理流程。
-   - `agents/openai.yaml`：技能顯示資訊。
-   - `assets/denden-generation-mask.png`：自訂 DenDen 圖片使用的遮罩。
-   - `references/denden-generation.md`：圖片生成規則。
-   - `scripts/`：設定用命令列工具、相依套件清單，以及可選安裝的日常 `denden` 技能。
+   - `SKILL.md`: setup and management instructions.
+   - `agents/openai.yaml`: skill display metadata.
+   - `assets/denden-generation-mask.png`: mask used to create a custom DenDen image.
+   - `references/denden-generation.md`: image-generation rules.
+   - `scripts/`: the setup CLI, its dependency files, and the optional daily-use `denden` skill.
 
-5. 目的地已存在時，只有 `scripts/source.json` 記錄相同 commit SHA 才可沿用；否則先詢問使用者是否更新，不得自行覆寫。
+5. If the destination already exists, reuse it only when `scripts/source.json` records the same commit SHA. Otherwise, ask the user whether to update it; do not overwrite it automatically.
 
-6. 在技能資料夾建立 `scripts/source.json`：
+6. Create `scripts/source.json` inside the skill directory:
 
    ```json
    {
@@ -57,4 +57,4 @@
    }
    ```
 
-7. 確認清單本身與 `files` 中的所有檔案齊全，且 `SKILL.md` 的名稱是 `denden-setup`。然後完整讀取 `SKILL.md` 及其要求的參考檔，直接協助使用者設定 DenDen。不執行其他安裝流程。
+7. Verify that the manifest and every file in its `files` array are present, and that `SKILL.md` declares the name `denden-setup`. Then read `SKILL.md` and every reference it requires in full, and use the skill to help the user set up DenDen. Do not follow any other installation flow.
