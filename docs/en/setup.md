@@ -30,7 +30,7 @@ Copy the entire block below and paste it into the AI assistant:
 ```text
 Please follow this DenDen installation guide and help me install and set up DenDen:
 
-https://raw.githubusercontent.com/hakendog/DenDen/b8a4b413f0260d827095d2418639451e7f1e837d/docs/agent-install.md
+https://raw.githubusercontent.com/hakendog/DenDen/a823029c9f9ff609352696302a08c9b6d329cacb/docs/agent-install.md
 ```
 
 The AI assistant reads the installation guide, loads the DenDen setup assistant, and starts checking the computer.
@@ -180,7 +180,7 @@ On a computer that already sends notifications, paste this into your AI assistan
 ```text
 Please follow this DenDen installation guide to load the setup assistant, then export my general notification settings for another computer:
 
-https://raw.githubusercontent.com/hakendog/DenDen/b8a4b413f0260d827095d2418639451e7f1e837d/docs/agent-install.md
+https://raw.githubusercontent.com/hakendog/DenDen/a823029c9f9ff609352696302a08c9b6d329cacb/docs/agent-install.md
 ```
 
 Then follow these steps:
@@ -193,7 +193,7 @@ Then follow these steps:
    ```text
    Please follow this DenDen installation guide to load the setup assistant. Then import my general notification settings, create separate sender permission for this computer, and install the daily DenDen notification feature:
 
-   https://raw.githubusercontent.com/hakendog/DenDen/b8a4b413f0260d827095d2418639451e7f1e837d/docs/agent-install.md
+   https://raw.githubusercontent.com/hakendog/DenDen/a823029c9f9ff609352696302a08c9b6d329cacb/docs/agent-install.md
    ```
 
 5. Choose the encrypted settings package and enter its password yourself.
@@ -221,7 +221,7 @@ Copy the entire block below and paste it into that AI assistant:
 ```text
 Please follow this DenDen installation guide to load the setup assistant, then install the daily DenDen notification feature for this AI assistant:
 
-https://raw.githubusercontent.com/hakendog/DenDen/b8a4b413f0260d827095d2418639451e7f1e837d/docs/agent-install.md
+https://raw.githubusercontent.com/hakendog/DenDen/a823029c9f9ff609352696302a08c9b6d329cacb/docs/agent-install.md
 ```
 
 Choose which task results should notify you during installation. Daily notifications can only send notifications. They cannot manage the Google project, pair a phone again, or change the DenDen image.

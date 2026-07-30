@@ -5,7 +5,7 @@
 ```text
 請先根據以下 DenDen 安裝引導載入設定助手，再檢查或修復 DenDen。我遇到的問題是：<請描述你看到的情況>
 
-https://raw.githubusercontent.com/hakendog/DenDen/b8a4b413f0260d827095d2418639451e7f1e837d/docs/agent-install.md
+https://raw.githubusercontent.com/hakendog/DenDen/a823029c9f9ff609352696302a08c9b6d329cacb/docs/agent-install.md
 ```
 
 設定助手會先讀取目前狀態，不會直接重建專案、清除手機資料或覆寫設定。
