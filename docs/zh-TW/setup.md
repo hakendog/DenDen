@@ -30,7 +30,7 @@ DenDen 支援 Android 8.0 以上版本：
 ```text
 請根據以下 DenDen 安裝引導，協助我完成安裝與設定：
 
-https://raw.githubusercontent.com/hakendog/DenDen/feed91fc23b70acfc1db56662f78c1015e72ed54/docs/agent-install.md
+https://raw.githubusercontent.com/hakendog/DenDen/b8a4b413f0260d827095d2418639451e7f1e837d/docs/agent-install.md
 ```
 
 AI 助理讀取安裝引導後，會載入 DenDen 設定助手並開始檢查。
@@ -180,7 +180,7 @@ DenDen 需要一個專用的 Google 專案傳送通知。你可以選擇：
 ```text
 請先根據以下 DenDen 安裝引導載入設定助手，再匯出一般通知設定，讓我在另一台電腦使用：
 
-https://raw.githubusercontent.com/hakendog/DenDen/feed91fc23b70acfc1db56662f78c1015e72ed54/docs/agent-install.md
+https://raw.githubusercontent.com/hakendog/DenDen/b8a4b413f0260d827095d2418639451e7f1e837d/docs/agent-install.md
 ```
 
 接著依序完成：
@@ -193,7 +193,7 @@ https://raw.githubusercontent.com/hakendog/DenDen/feed91fc23b70acfc1db56662f78c1
    ```text
    請先根據以下 DenDen 安裝引導載入設定助手，再匯入我提供的一般通知設定，為這台電腦建立獨立的發送權限，並安裝 DenDen 日常通知功能：
 
-   https://raw.githubusercontent.com/hakendog/DenDen/feed91fc23b70acfc1db56662f78c1015e72ed54/docs/agent-install.md
+   https://raw.githubusercontent.com/hakendog/DenDen/b8a4b413f0260d827095d2418639451e7f1e837d/docs/agent-install.md
    ```
 
 5. 選擇剛才的加密設定包，再由你直接輸入備份密碼。
@@ -221,7 +221,7 @@ https://raw.githubusercontent.com/hakendog/DenDen/feed91fc23b70acfc1db56662f78c1
 ```text
 請先根據以下 DenDen 安裝引導載入設定助手，再為目前的 AI 助理安裝 DenDen 日常通知功能：
 
-https://raw.githubusercontent.com/hakendog/DenDen/feed91fc23b70acfc1db56662f78c1015e72ed54/docs/agent-install.md
+https://raw.githubusercontent.com/hakendog/DenDen/b8a4b413f0260d827095d2418639451e7f1e837d/docs/agent-install.md
 ```
 
 安裝時可以重新選擇哪些工作結果需要通知。日常通知功能只能傳送通知，不能管理 Google 專案、重新配對手機或更換圖片。
