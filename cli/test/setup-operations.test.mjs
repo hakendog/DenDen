@@ -248,6 +248,28 @@ test("pairing rotation requires a digest bound to the current pairing", async ()
   }
 });
 
+test("pairing rotation repairs a legacy sender config without brand management config", async () => {
+  const fixture = await pairingFixture();
+  try {
+    await rm(fixture.brandConfigPath);
+    const args = ["--config-path", fixture.configPath, "--brand-config-path", fixture.brandConfigPath, "--qr-path", fixture.qrPath];
+    const plan = await runRotatePlanCommand(args);
+    let byte = 110;
+    const result = await runRotatePairingCommand([...args, "--approved-digest", plan.approvalDigest], {
+      nowMillis: 1_800_000_100_000,
+      randomBytes: (size) => Buffer.alloc(size, byte++),
+    });
+    const status = await runPairingStatusCommand(args);
+    assert.equal(result.rotated, true);
+    assert.equal(result.previousPairingFingerprint, plan.currentPairingFingerprint);
+    assert.equal(status.configured, true);
+    assert.equal(status.brandGeneration, 0);
+    assert.doesNotMatch(JSON.stringify(result), /eventKey|brandKey|DDC\./);
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
 test("sender authorization creates one approval-bound low-privilege service account", async () => {
   const fixture = await pairingFixture();
   const calls = [];

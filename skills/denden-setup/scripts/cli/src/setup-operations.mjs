@@ -603,8 +603,9 @@ export async function runRotatePairingCommand(argv, context = {}) {
   const options = parseOptions(argv);
   const paths = setupPaths(options, context.env);
   const daily = validateDirectFcmSenderConfig(await readJson(paths.configPath));
-  const brand = validateBrandConfig(await readJson(paths.brandConfigPath));
-  assertMatchingConfigs(daily, brand);
+  const rawBrand = await readJson(paths.brandConfigPath, { required: false });
+  const brand = rawBrand === null ? null : validateBrandConfig(rawBrand);
+  if (brand) assertMatchingConfigs(daily, brand);
   const approval = buildRotateApproval(daily);
   if (options["approved-digest"] !== approval.approvalDigest) {
     throw new Error("旋轉摘要尚未取得明確同意，或核准後配對已改變；請先執行 denden setup rotate-plan");
@@ -616,7 +617,7 @@ export async function runRotatePairingCommand(argv, context = {}) {
     nowMillis: context.nowMillis,
     randomBytes: context.randomBytes,
   });
-  if (brand.activeImageBase64) {
+  if (brand?.activeImageBase64) {
     bundle.brandConfig.activeImageBase64 = brand.activeImageBase64;
     for (const name of ["brandColor", "backgroundColor"]) {
       if (brand[name] !== undefined) bundle.brandConfig[name] = brand[name];
