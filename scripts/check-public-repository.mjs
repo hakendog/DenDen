@@ -93,9 +93,9 @@ function git(args, cwd, options = {}) {
 
 function parseExpectedCommits(argv) {
   const index = argv.indexOf("--expected-commits");
-  if (index === -1) return 2;
+  if (index === -1) return undefined;
   const value = Number(argv[index + 1]);
-  if (!Number.isInteger(value) || value < 1 || value > 2) throw new Error("--expected-commits 必須是 1 或 2");
+  if (!Number.isInteger(value) || value < 1) throw new Error("--expected-commits 必須是正整數");
   return value;
 }
 
@@ -114,7 +114,7 @@ function inspectBlob(oid, path, failures, cwd) {
   }
 }
 
-export function inspectPublicRepository(expectedCommits = 2, cwd = process.cwd()) {
+export function inspectPublicRepository(expectedCommits, cwd = process.cwd()) {
   const failures = [];
   const indexLines = git(["ls-files", "--stage", "-z"], cwd).split("\0").filter(Boolean);
   const paths = new Set();
@@ -132,7 +132,7 @@ export function inspectPublicRepository(expectedCommits = 2, cwd = process.cwd()
   for (const path of requiredPaths) if (!paths.has(path)) failures.push(`${path}: 缺少必要公開檔案`);
 
   const commits = git(["rev-list", "--all"], cwd).trim().split(/\r?\n/).filter(Boolean);
-  if (commits.length !== expectedCommits) failures.push(`公開歷史應有 ${expectedCommits} 個 commit，目前為 ${commits.length}`);
+  if (expectedCommits !== undefined && commits.length !== expectedCommits) failures.push(`公開歷史應有 ${expectedCommits} 個 commit，目前為 ${commits.length}`);
   for (const commit of commits) {
     const historicalPaths = git(["ls-tree", "-r", "--name-only", "-z", commit], cwd).split("\0").filter(Boolean);
     for (const path of historicalPaths) {

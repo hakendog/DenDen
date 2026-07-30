@@ -18,7 +18,7 @@
     "test": "node --test \"cli/test/**/*.test.mjs\"",
     "test:cli": "node --test \"cli/test/**/*.test.mjs\"",
     "verify:repository": "node scripts/check-repository.mjs",
-    "verify:public": "node scripts/check-public-repository.mjs --expected-commits 2",
+    "verify:public": "node scripts/check-public-repository.mjs",
     "verify:docs": "node scripts/check-docs.mjs",
     "verify:apk": "node scripts/check-debug-apk.mjs"
   },

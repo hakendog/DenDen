@@ -130,8 +130,11 @@ test("Traditional Chinese docs and install bootstrap stay official, pinned, and 
   const guide = await readFile(join(root, "docs/agent-install.md"), "utf8");
   const setup = await readFile(join(root, "skills/denden-setup/SKILL.md"), "utf8");
   const generation = await readFile(join(root, "skills/denden-setup/references/denden-generation.md"), "utf8");
-  assert.doesNotMatch(guide, /<40 碼完整 commit SHA>|raw\.githubusercontent\.com\/hakendog\/DenDen\//);
-  assert.match(guide, /skills\/denden-setup\/install-manifest\.json/);
+  assert.doesNotMatch(guide, /<40 碼完整 commit SHA>/);
+  assert.match(guide, /raw\.githubusercontent\.com\/hakendog\/DenDen\/\{commit\}\/docs\/agent-install\.md/);
+  assert.match(guide, /raw\.githubusercontent\.com\/hakendog\/DenDen\/\{commit\}\/skills\/denden-setup\/install-manifest\.json/);
+  assert.match(guide, /相對於 `skills\/denden-setup\/`/);
+  assert.match(guide, /denden-setup\/SKILL\.md/);
   assert.match(guide, /安裝到全域/);
   assert.match(guide, /安裝到目前專案/);
   assert.match(guide, /僅本次暫時使用/);
