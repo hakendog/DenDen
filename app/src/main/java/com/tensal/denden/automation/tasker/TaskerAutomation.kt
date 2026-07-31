@@ -1,7 +1,9 @@
 package com.tensal.denden.automation.tasker
 
 import android.app.Activity
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Base64
 import androidx.activity.ComponentActivity
@@ -30,75 +32,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.joaomgcd.taskerpluginlibrary.action.TaskerPluginRunnerActionNoOutput
-import com.joaomgcd.taskerpluginlibrary.config.TaskerPluginConfig
-import com.joaomgcd.taskerpluginlibrary.config.TaskerPluginConfigHelperNoOutput
-import com.joaomgcd.taskerpluginlibrary.input.TaskerInput
-import com.joaomgcd.taskerpluginlibrary.input.TaskerInputField
-import com.joaomgcd.taskerpluginlibrary.input.TaskerInputRoot
-import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResult
-import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResultError
-import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResultSucess
 import com.tensal.denden.R
+import com.tensal.denden.codePointLength
 import com.tensal.denden.automation.LocalAutomationMode
 import com.tensal.denden.automation.taskerAutomationRequest
 import com.tensal.denden.automation.triggerLocalAutomation
 import com.tensal.denden.withSelectedAppLanguage
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 import java.security.MessageDigest
 import java.security.SecureRandom
 
-@TaskerInputRoot
-class DenDenTaskerInput @JvmOverloads constructor(
-    @field:TaskerInputField("mode", labelResIdName = "tasker_mode")
-    var mode: String? = LocalAutomationMode.NOTIFY.value,
-    @field:TaskerInputField("title", labelResIdName = "tasker_title")
-    var title: String? = null,
-    @field:TaskerInputField("message", labelResIdName = "tasker_message")
-    var message: String? = null,
-    @field:TaskerInputField("duration", labelResIdName = "tasker_duration")
-    var durationSeconds: String? = "30",
-    @field:TaskerInputField(
-        "capability",
-        labelResIdName = "tasker_capability",
-        ignoreInStringBlurb = true
-    )
-    var capability: String? = null
-)
-
-class DenDenTaskerHelper(config: TaskerPluginConfig<DenDenTaskerInput>) :
-    TaskerPluginConfigHelperNoOutput<DenDenTaskerInput, DenDenTaskerRunner>(config) {
-    override val runnerClass = DenDenTaskerRunner::class.java
-    override val inputClass = DenDenTaskerInput::class.java
-    override val addDefaultStringBlurb = false
-
-    override fun addToStringBlurb(input: TaskerInput<DenDenTaskerInput>, blurbBuilder: StringBuilder) {
-        val values = input.regular
-        blurbBuilder.append(values.mode).append(": ").append(values.title.orEmpty()).append(" · ")
-            .append(values.message.orEmpty())
-    }
-}
-
-class TaskerAutomationActivity : ComponentActivity(), TaskerPluginConfig<DenDenTaskerInput> {
-    override val context: Context get() = applicationContext
-    private val helper by lazy { DenDenTaskerHelper(this) }
+class TaskerAutomationActivity : ComponentActivity() {
     private var mode by mutableStateOf(LocalAutomationMode.NOTIFY.value)
     private var title by mutableStateOf("")
     private var message by mutableStateOf("")
     private var durationSeconds by mutableStateOf("30")
     private var validationMessage by mutableStateOf<String?>(null)
-
-    override val inputForTasker: TaskerInput<DenDenTaskerInput>
-        get() = TaskerInput(
-            DenDenTaskerInput(
-                mode = mode,
-                title = title,
-                message = message,
-                durationSeconds = durationSeconds,
-                capability = TaskerCapabilityStore(this).getOrCreate()
-            )
-        )
 
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(newBase.withSelectedAppLanguage())
@@ -106,11 +57,12 @@ class TaskerAutomationActivity : ComponentActivity(), TaskerPluginConfig<DenDenT
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (!isTrustedTaskerCaller(callingPackage)) {
+        if (!isTrustedTaskerCaller(callingPackage) || intent.action != ACTION_EDIT_SETTING) {
             setResult(Activity.RESULT_CANCELED)
             finish()
             return
         }
+        intent.taskerConfigOrNull()?.let(::assignFromInput)
         setContent {
             MaterialTheme {
                 TaskerConfigScreen(
@@ -131,11 +83,9 @@ class TaskerAutomationActivity : ComponentActivity(), TaskerPluginConfig<DenDenT
                 )
             }
         }
-        helper.onCreate()
     }
 
-    override fun assignFromInput(input: TaskerInput<DenDenTaskerInput>) {
-        val saved = input.regular
+    private fun assignFromInput(saved: TaskerAutomationConfig) {
         mode = saved.mode?.takeIf { value -> LocalAutomationMode.entries.any { it.value == value } }
             ?: LocalAutomationMode.NOTIFY.value
         title = saved.title.orEmpty()
@@ -146,35 +96,52 @@ class TaskerAutomationActivity : ComponentActivity(), TaskerPluginConfig<DenDenT
     private fun saveForTasker() {
         validationMessage = validateTaskerConfig(mode, title, message, durationSeconds)
             ?.let { getString(R.string.tasker_invalid_settings) }
-        if (validationMessage == null) helper.finishForTasker()
+        if (validationMessage != null) return
+
+        val config = TaskerAutomationConfig(
+            mode = mode,
+            title = title,
+            message = message,
+            durationSeconds = durationSeconds,
+            capability = TaskerCapabilityStore(this).getOrCreate()
+        )
+        setResult(Activity.RESULT_OK, config.toResultIntent())
+        finish()
     }
 }
 
-class DenDenTaskerRunner : TaskerPluginRunnerActionNoOutput<DenDenTaskerInput>() {
-    override val notificationProperties
-        get() = NotificationProperties(
-            titleResId = R.string.tasker_running_title,
-            textResId = R.string.tasker_running_text,
-            iconResId = R.drawable.ic_notification
-        )
-
-    override fun run(context: Context, input: TaskerInput<DenDenTaskerInput>): TaskerPluginResult<Unit> {
-        val values = input.regular
-        if (!TaskerCapabilityStore(context).matches(values.capability)) {
-            return TaskerPluginResultError(1, "Tasker action authorization is invalid")
-        }
-        return runCatching {
-            val request = taskerAutomationRequest(
-                values.mode,
-                values.title,
-                values.message,
-                values.durationSeconds,
-                context.withSelectedAppLanguage().getString(R.string.tasker_channel_name)
+class TaskerAutomationReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        if (!isExplicitTaskerFireIntent(
+                context.packageName,
+                intent.action,
+                intent.`package`,
+                intent.component?.packageName
             )
-            val result = runBlocking(Dispatchers.IO) { triggerLocalAutomation(context, request) }
-            check(result.degradedReason == null) { "DenDen event stored, but alert delivery is unavailable" }
-            TaskerPluginResultSucess<Unit>()
-        }.getOrElse { TaskerPluginResultError(it) }
+        ) return
+
+        val config = intent.taskerConfigOrNull() ?: return
+        val ordered = isOrderedBroadcast
+        if (!TaskerCapabilityStore(context).matches(config.capability)) {
+            if (ordered) resultCode = TASKER_RESULT_FAILED
+            return
+        }
+
+        val pendingResult = goAsync()
+        CoroutineScope(Dispatchers.IO).launch {
+            val result = runCatching {
+                val request = taskerAutomationRequest(
+                    config.mode,
+                    config.title,
+                    config.message,
+                    config.durationSeconds,
+                    context.withSelectedAppLanguage().getString(R.string.tasker_channel_name)
+                )
+                triggerLocalAutomation(context, request).degradedReason == null
+            }.getOrDefault(false)
+            if (ordered) pendingResult.resultCode = if (result) Activity.RESULT_OK else TASKER_RESULT_FAILED
+            pendingResult.finish()
+        }
     }
 }
 
@@ -256,22 +223,68 @@ private fun TaskerConfigScreen(
 
 internal fun validateTaskerConfig(mode: String, title: String, message: String, duration: String): String? {
     if (LocalAutomationMode.entries.none { it.value == mode }) return "mode"
-    if (title.length > 200) return "title"
-    if (message.length > 1000) return "message"
-    if (duration.length > 100) return "duration"
+    if (title.codePointLength() > 200) return "title"
+    if (message.codePointLength() > 1000) return "message"
+    if (duration.codePointLength() > 100) return "duration"
     if ('%' !in duration && (duration.toIntOrNull() !in 0..300)) return "duration"
     return null
 }
 
 internal fun isTrustedTaskerCaller(packageName: String?): Boolean = packageName == TASKER_PACKAGE
 
+internal fun isExplicitTaskerFireIntent(
+    ownPackage: String,
+    action: String?,
+    targetPackage: String?,
+    componentPackage: String?
+): Boolean = action == ACTION_FIRE_SETTING &&
+    (targetPackage == ownPackage || componentPackage == ownPackage)
+
+private data class TaskerAutomationConfig(
+    val mode: String?,
+    val title: String?,
+    val message: String?,
+    val durationSeconds: String?,
+    val capability: String?
+) {
+    fun toResultIntent(): Intent {
+        val bundle = Bundle().apply {
+            putString(MODE_KEY, mode)
+            putString(TITLE_KEY, title)
+            putString(MESSAGE_KEY, message)
+            putString(DURATION_KEY, durationSeconds)
+            putString(CAPABILITY_KEY, capability)
+            putString(TASKER_VARIABLE_REPLACE_KEYS, "$TITLE_KEY $MESSAGE_KEY $DURATION_KEY")
+        }
+        return Intent()
+            .putExtra(EXTRA_BUNDLE, bundle)
+            .putExtra(EXTRA_BLURB, "$mode: ${title.orEmpty()} · ${message.orEmpty()}")
+            .putExtra(TASKER_REQUESTED_TIMEOUT, TASKER_TIMEOUT_MILLIS)
+    }
+}
+
+private fun Intent.taskerConfigOrNull(): TaskerAutomationConfig? {
+    val bundle = runCatching { getBundleExtra(EXTRA_BUNDLE) }.getOrNull() ?: return null
+    return runCatching {
+        TaskerAutomationConfig(
+            mode = bundle.getString(MODE_KEY),
+            title = bundle.getString(TITLE_KEY),
+            message = bundle.getString(MESSAGE_KEY),
+            durationSeconds = bundle.getString(DURATION_KEY),
+            capability = bundle.getString(CAPABILITY_KEY)
+        )
+    }.getOrNull()
+}
+
 private class TaskerCapabilityStore(context: Context) {
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-    fun getOrCreate(): String = prefs.getString(CAPABILITY_KEY, null) ?: ByteArray(32).also {
-        SecureRandom().nextBytes(it)
-    }.let { Base64.encodeToString(it, Base64.NO_WRAP or Base64.URL_SAFE) }.also {
-        prefs.edit().putString(CAPABILITY_KEY, it).apply()
+    fun getOrCreate(): String = prefs.getString(CAPABILITY_KEY, null) ?: synchronized(TaskerCapabilityStore::class.java) {
+        prefs.getString(CAPABILITY_KEY, null) ?: ByteArray(32).also {
+            SecureRandom().nextBytes(it)
+        }.let { Base64.encodeToString(it, Base64.NO_WRAP or Base64.URL_SAFE) }.also {
+            check(prefs.edit().putString(CAPABILITY_KEY, it).commit())
+        }
     }
 
     fun matches(candidate: String?): Boolean = MessageDigest.isEqual(
@@ -281,5 +294,17 @@ private class TaskerCapabilityStore(context: Context) {
 }
 
 private const val TASKER_PACKAGE = "net.dinglisch.android.taskerm"
+private const val ACTION_EDIT_SETTING = "com.twofortyfouram.locale.intent.action.EDIT_SETTING"
+private const val ACTION_FIRE_SETTING = "com.twofortyfouram.locale.intent.action.FIRE_SETTING"
+private const val EXTRA_BUNDLE = "com.twofortyfouram.locale.intent.extra.BUNDLE"
+private const val EXTRA_BLURB = "com.twofortyfouram.locale.intent.extra.BLURB"
+private const val TASKER_VARIABLE_REPLACE_KEYS = "net.dinglisch.android.tasker.extras.VARIABLE_REPLACE_KEYS"
+private const val TASKER_REQUESTED_TIMEOUT = "net.dinglisch.android.tasker.extras.REQUESTED_TIMEOUT"
+private const val TASKER_TIMEOUT_MILLIS = 60_000
+private const val TASKER_RESULT_FAILED = 2
 private const val PREFS_NAME = "denden_tasker"
+private const val MODE_KEY = "mode"
+private const val TITLE_KEY = "title"
+private const val MESSAGE_KEY = "message"
+private const val DURATION_KEY = "duration"
 private const val CAPABILITY_KEY = "capability"

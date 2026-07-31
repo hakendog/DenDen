@@ -7,11 +7,16 @@ export async function runExternal(command, args, {
   interactive = false,
   timeoutMillis = interactive ? 15 * 60_000 : 60_000,
 } = {}) {
+  if (typeof command !== "string" || !command.trim() || /[\0\r\n]/.test(command) ||
+      !Array.isArray(args) || args.some((value) => typeof value !== "string" || value.includes("\0"))) {
+    throw new Error("外部命令或參數無效");
+  }
   if (!Number.isSafeInteger(timeoutMillis) || timeoutMillis < 1_000 || timeoutMillis > 30 * 60_000) {
     throw new Error("外部命令 timeout 無效");
   }
   return new Promise((resolve, reject) => {
-    const executable = process.platform === "win32" ? env.ComSpec || "cmd.exe" : command;
+    let executable = command;
+    let commandArgs = args;
     const native = new Set(["git", "node", "winget"]);
     const windowsCommand = /\.[a-z0-9]+$/i.test(command)
       ? command
@@ -22,8 +27,11 @@ export async function runExternal(command, args, {
         reject(new Error(`${command} 參數含有 Windows 批次命令不安全字元`));
         return;
       }
+      executable = env.ComSpec || "cmd.exe";
+      commandArgs = ["/d", "/s", "/c", windowsCommand, ...args];
+    } else if (process.platform === "win32") {
+      executable = windowsCommand;
     }
-    const commandArgs = process.platform === "win32" ? ["/d", "/s", "/c", windowsCommand, ...args] : args;
     const child = spawn(executable, commandArgs, {
       cwd,
       env,

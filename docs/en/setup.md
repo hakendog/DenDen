@@ -99,7 +99,7 @@ If anything is unclear or needs to change, ask the AI assistant to explain or up
 
 ### 7. Complete computer setup
 
-After approval, the AI assistant creates or configures the project dedicated to DenDen and gives this computer its own notification permission. It then removes the temporary Google administrative access used for setup. Daily notifications never receive that administrative access.
+After approval, the AI assistant creates or configures the project dedicated to DenDen and installs the shared least-privilege sender credential on this computer. It then removes the temporary Google administrative access used for setup. Daily notifications never receive that administrative access.
 
 If a step cannot be completed, the AI assistant stops and explains the problem. It does not report an incomplete setup as successful.
 

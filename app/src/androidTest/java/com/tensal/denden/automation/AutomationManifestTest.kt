@@ -6,7 +6,10 @@ import android.content.Intent
 import android.content.pm.ShortcutManager
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.tensal.denden.LauncherActivity
+import com.tensal.denden.MainActivity
 import com.tensal.denden.automation.tasker.TaskerAutomationActivity
+import com.tensal.denden.automation.tasker.TaskerAutomationReceiver
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -33,6 +36,10 @@ class AutomationManifestTest {
     @Test
     fun trampolineIsPrivateAndTaskerConfigIsDiscoverable() {
         val packageManager = context.packageManager
+        val main = packageManager.getActivityInfo(ComponentName(context, MainActivity::class.java), 0)
+        assertFalse(main.exported)
+        val launcher = packageManager.getActivityInfo(ComponentName(context, LauncherActivity::class.java), 0)
+        assertTrue(launcher.exported)
         val trampoline = packageManager.getActivityInfo(ComponentName(context, BixbyAutomationActivity::class.java), 0)
         assertFalse(trampoline.exported)
         val tasker = packageManager.getActivityInfo(ComponentName(context, TaskerAutomationActivity::class.java), 0)
@@ -42,5 +49,10 @@ class AutomationManifestTest {
             0
         )
         assertTrue(matches.any { it.activityInfo.name == TaskerAutomationActivity::class.java.name })
+        val receivers = packageManager.queryBroadcastReceivers(
+            Intent("com.twofortyfouram.locale.intent.action.FIRE_SETTING").setPackage(context.packageName),
+            0
+        )
+        assertTrue(receivers.any { it.activityInfo.name == TaskerAutomationReceiver::class.java.name })
     }
 }

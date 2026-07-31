@@ -16,6 +16,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.tensal.denden.MainActivity
 import com.tensal.denden.R
+import com.tensal.denden.ellipsizeCodePoints
 import com.tensal.denden.withSelectedAppLanguage
 import com.tensal.denden.branding.applyDenDenBranding
 import com.tensal.denden.data.EventDatabase
@@ -285,7 +286,7 @@ class AlarmService : Service() {
             .setContentText(alarmNotificationSummary(message))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
             .setOngoing(true)
             .setContentIntent(openPendingIntent)
             .setFullScreenIntent(openPendingIntent, true)
@@ -339,7 +340,7 @@ internal fun preClaimAlarmNotificationId(eventId: String): Int =
     alarmNotificationId(eventId).let { if (it == Int.MIN_VALUE) Int.MAX_VALUE else -it }
 
 internal fun alarmNotificationSummary(message: String): String =
-    if (message.length <= 120) message else message.take(120) + "…"
+    message.ellipsizeCodePoints(120)
 
 internal fun isRingExpired(ringUntilMillis: Long?, now: Long): Boolean =
     ringUntilMillis != null && ringUntilMillis < now

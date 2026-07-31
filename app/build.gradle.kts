@@ -1,3 +1,6 @@
+import java.security.KeyStore
+import java.security.MessageDigest
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -20,6 +23,7 @@ val releaseSigningConfigured = listOf(
     releaseKeyAlias,
     releaseKeyPassword,
 ).all { !it.isNullOrBlank() }
+val expectedReleaseCertificateSha256 = "4F8B691E453BFB9B10CCCE1B1F84D9AD887AA7157D1B9D28AFF48F34998F72D8"
 
 android {
     namespace = "com.tensal.denden"
@@ -29,8 +33,8 @@ android {
         applicationId = "com.tensal.denden"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -101,6 +105,21 @@ val verifyReleaseSigning by tasks.registering {
         if (canonicalStore.toPath().startsWith(rootProject.projectDir.canonicalFile.toPath())) {
             throw GradleException("release keystore 必須位於 repository 外")
         }
+        val alias = requireNotNull(releaseKeyAlias)
+        val keyStore = runCatching {
+            KeyStore.getInstance(if (store.extension.lowercase() in setOf("p12", "pfx")) "PKCS12" else "JKS").apply {
+                store.inputStream().use { load(it, requireNotNull(releaseStorePassword).toCharArray()) }
+            }
+        }.getOrElse { throw GradleException("release keystore 無法讀取；請確認格式與密碼") }
+        if (runCatching { keyStore.getKey(alias, requireNotNull(releaseKeyPassword).toCharArray()) }.getOrNull() == null) {
+            throw GradleException("release key alias 或密碼無效")
+        }
+        val certificate = keyStore.getCertificate(alias) ?: throw GradleException("release key alias 沒有憑證")
+        val fingerprint = MessageDigest.getInstance("SHA-256").digest(certificate.encoded)
+            .joinToString("") { "%02X".format(it) }
+        if (fingerprint != expectedReleaseCertificateSha256) {
+            throw GradleException("release 簽章憑證與既有 DenDen 正式版不相容")
+        }
     }
 }
 
@@ -140,7 +159,6 @@ dependencies {
     implementation("com.google.firebase:firebase-installations")
     implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
     implementation("androidx.work:work-runtime-ktx:2.11.2")
-    implementation("com.joaomgcd:taskerpluginlibrary:0.4.10")
     implementation("com.revenuecat.purchases:slide-to-unlock:1.0.2")
 
     constraints {

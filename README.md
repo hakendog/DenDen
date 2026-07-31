@@ -56,6 +56,15 @@ Setup is complete when the notification appears on your phone and the same messa
 
 For a step-by-step explanation, read the [DenDen setup assistant guide](docs/en/setup.md).
 
+### Two AI skills
+
+DenDen separates setup authority from daily notification access:
+
+- `denden-setup` installs, configures, pairs, and manages DenDen.
+- `denden` sends routine work-result notifications with only low-privilege sender access.
+
+The `denden-setup` skill can install the `denden` skill during initial setup or later.
+
 ## Use DenDen only on your phone
 
 If you only use Samsung Bixby or Tasker, you only need the DenDen APK. You do not need a computer, Firebase, a DenDen pairing code, or an AI assistant.

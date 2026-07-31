@@ -88,6 +88,27 @@ class DirectFcmMessageDecoderTest {
     }
 
     @Test
+    fun `text limits count Unicode code points like the sender`() {
+        val emoji = "😀"
+        val acceptedTitle = decodeDirectFcmMessage(
+            encryptedEvent("title" to emoji.repeat(200)), pairing, NOW
+        ) as DecodedDirectMessage.Event
+        assertEquals(200, acceptedTitle.event.title?.codePointCount(0, acceptedTitle.event.title!!.length))
+
+        assertThrows(IllegalArgumentException::class.java) {
+            decodeDirectFcmMessage(encryptedEvent("title" to emoji.repeat(201)), pairing, NOW)
+        }
+        decodeDirectFcmMessage(
+            encryptedEvent("tags" to org.json.JSONArray().put(emoji.repeat(100))), pairing, NOW
+        )
+        assertThrows(IllegalArgumentException::class.java) {
+            decodeDirectFcmMessage(
+                encryptedEvent("tags" to org.json.JSONArray().put(emoji.repeat(101))), pairing, NOW
+            )
+        }
+    }
+
+    @Test
     fun `brand and optional background colors remain separate`() {
         val modern = brandManifest(JSONObject().put("brandColor", "#123456"), "message-brand-new1", "wMHCw8TFxsfIycrL")
         val decoded = decodeDirectFcmMessage(modern, pairing, NOW) as DecodedDirectMessage.Brand

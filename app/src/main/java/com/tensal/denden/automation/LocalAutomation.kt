@@ -8,6 +8,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.tensal.denden.R
+import com.tensal.denden.codePointLength
 import com.tensal.denden.data.DenDenEvent
 import com.tensal.denden.data.DirectEventCommit
 import com.tensal.denden.data.EventDatabase
@@ -43,8 +44,8 @@ data class LocalAutomationRequest(
     val channelName: String? = null
 ) {
     init {
-        require(title == null || title.length <= 200) { "Title is too long" }
-        require(message == null || message.length <= 1000) { "Message is too long" }
+        require(title == null || title.codePointLength() <= 200) { "Title is too long" }
+        require(message == null || message.codePointLength() <= 1000) { "Message is too long" }
         require(durationSeconds in 0..DenDenEvent.MAX_DURATION) { "Duration must be between 0 and 300 seconds" }
     }
 }
