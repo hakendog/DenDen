@@ -142,7 +142,7 @@ test("public license, identity, version, and security metadata stay aligned", as
 });
 
 test("daily skill cannot gain backend or repository ring authority", async () => {
-  const skill = await readFile(join(root, "skills/denden/SKILL.md"), "utf8");
+  const skill = (await readFile(join(root, "skills/denden/SKILL.md"), "utf8")).replaceAll("\r\n", "\n");
   assert.ok(skill.length <= 2500, `daily skill is too verbose: ${skill.length} characters`);
   assert.match(skill, /After substantive work.*before the final response.*wait for its result/);
   assert.match(skill, /Do not report simple answers or status checks/);
