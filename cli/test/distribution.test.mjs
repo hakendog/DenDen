@@ -109,17 +109,27 @@ test("public license, identity, version, and security metadata stay aligned", as
   const pkg = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
   const lock = JSON.parse(await readFile(join(root, "package-lock.json"), "utf8"));
   assert.deepEqual({ version: pkg.version, license: pkg.license, private: pkg.private }, {
-    version: "1.0.0",
+    version: "1.0.1",
     license: "Apache-2.0",
     private: true,
   });
+  assert.equal(lock.packages[""].version, pkg.version);
   assert.equal(lock.packages[""].license, "Apache-2.0");
+
+  const setupPkg = JSON.parse(await readFile(join(root, "skills/denden-setup/scripts/package.json"), "utf8"));
+  const setupLock = JSON.parse(await readFile(join(root, "skills/denden-setup/scripts/package-lock.json"), "utf8"));
+  assert.equal(setupPkg.version, pkg.version);
+  assert.equal(setupLock.packages[""].version, pkg.version);
 
   const android = await readFile(join(root, "app/build.gradle.kts"), "utf8");
   assert.match(android, /namespace = "com\.tensal\.denden"/);
   assert.match(android, /applicationId = "com\.tensal\.denden"/);
-  assert.match(android, /versionCode = 1/);
-  assert.match(android, /versionName = "1\.0\.0"/);
+  assert.doesNotMatch(android, /com\.joaomgcd:taskerpluginlibrary/);
+  assert.match(android, /versionCode = 2/);
+  assert.match(android, /versionName = "1\.0\.1"/);
+
+  const workflow = await readFile(join(root, ".github/workflows/ci.yml"), "utf8");
+  assert.match(workflow, /api-level: \[26, 35\]/);
 
   const readme = await readFile(join(root, "README.zh-TW.md"), "utf8");
   const readmeEnglish = await readFile(join(root, "README.md"), "utf8");

@@ -60,18 +60,6 @@ class DirectPairingWorker(context: Context, params: WorkerParameters) : Coroutin
     }
 }
 
-fun scheduleDirectResubscribe(context: Context) {
-    val revision = DirectPairingStore(context).snapshot().localPairingRevision
-    WorkManager.getInstance(context).enqueueUniqueWork(
-        DirectPairingWorker.WORK_NAME,
-        ExistingWorkPolicy.REPLACE,
-        OneTimeWorkRequestBuilder<DirectPairingWorker>()
-            .setInputData(Data.Builder().putLong(DirectPairingWorker.REVISION_KEY, revision).build())
-            .setConstraints(connectedWorkConstraints())
-            .build()
-    )
-}
-
 fun scheduleDirectPairing(context: Context) {
     val revision = DirectPairingStore(context).snapshot().localPairingRevision
     WorkManager.getInstance(context).enqueueUniqueWork(

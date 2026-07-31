@@ -1,6 +1,7 @@
 package com.tensal.denden.messaging
 
 import com.tensal.denden.data.DenDenEvent
+import com.tensal.denden.codePointLength
 import com.tensal.denden.protocol.DirectFcmProtocol
 import org.json.JSONArray
 import org.json.JSONObject
@@ -141,7 +142,7 @@ private fun decodeEvent(
     val ringUntil = if (payload.has("ringUntilMillis")) payload.optLong("ringUntilMillis", -1) else null
     require(mode != "ring" || (ringUntil != null && ringUntil > issuedAtMillis)) { "響鈴期限無效" }
     val tags = payload.optJSONArray("tags")?.toStringList().orEmpty()
-    require(tags.size <= 20 && tags.all { it.length <= 100 }) { "事件標籤無效" }
+    require(tags.size <= 20 && tags.all { it.codePointLength() <= 100 }) { "事件標籤無效" }
     val action = if (mode == "ring") "ring" else "notify"
     val event = DenDenEvent(
         eventId = eventId,
@@ -203,12 +204,12 @@ private fun JSONObject.requiredId(name: String): String = requiredText(name, 200
 }
 
 private fun JSONObject.requiredText(name: String, maxLength: Int): String = optString(name).also {
-    require(it.isNotBlank() && it == it.trim() && it.length <= maxLength) { "$name 無效" }
+    require(it.isNotBlank() && it == it.trim() && it.codePointLength() <= maxLength) { "$name 無效" }
 }
 
 private fun JSONObject.optionalString(name: String, maxLength: Int): String? {
     if (!has(name)) return null
-    return optString(name).also { require(it.length <= maxLength) { "$name 無效" } }
+    return optString(name).also { require(it.codePointLength() <= maxLength) { "$name 無效" } }
 }
 
 private fun JSONObject.optionalColor(name: String): String? {

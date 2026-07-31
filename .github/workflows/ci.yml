@@ -52,12 +52,33 @@ jobs:
       - run: |
           chmod +x gradlew
           ./gradlew test assembleDebug lint --no-daemon
+      - run: npm run verify:apk
+
+  android-instrumentation:
+    name: android instrumentation (API ${{ matrix.api-level }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [26, 35]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
       - name: Run Android instrumentation tests
+        env:
+          DENDEN_API_LEVEL: ${{ matrix.api-level }}
         run: |
+          chmod +x gradlew
           export ANDROID_AVD_HOME="$RUNNER_TEMP/denden-avd"
           mkdir -p "$ANDROID_AVD_HOME"
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "emulator" "system-images;android-35;google_apis;x86_64"
-          echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --force --name denden-ci --package "system-images;android-35;google_apis;x86_64" --device pixel_2
+          denden_system_image="system-images;android-${DENDEN_API_LEVEL};google_apis;x86_64"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "emulator" "$denden_system_image"
+          echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --force --name denden-ci --package "$denden_system_image" --device pixel_2
           sudo chmod 666 /dev/kvm
           "$ANDROID_HOME/emulator/emulator" -avd denden-ci -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect &
           timeout 300 "$ANDROID_HOME/platform-tools/adb" wait-for-device
@@ -68,4 +89,3 @@ jobs:
           done
           "$ANDROID_HOME/platform-tools/adb" shell input keyevent 82
           ./gradlew connectedDebugAndroidTest --no-daemon
-      - run: npm run verify:apk

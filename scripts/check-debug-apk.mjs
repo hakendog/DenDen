@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { findForbiddenRepositoryContent, isForbiddenRepositoryPath } from "./check-repository.mjs";
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
-const apk = join(root, "app", "build", "outputs", "apk", "debug", "app-debug.apk");
+const apk = resolve(process.argv[2] ?? join(root, "app", "build", "outputs", "apk", "debug", "app-debug.apk"));
 const internalMarkers = [
   /DenDen-internal/i,
   /D:\\workspace\\DenDen/i,
@@ -61,7 +61,7 @@ async function main() {
     await rm(resolved, { recursive: true, force: true });
   }
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log(`debug APK safety check passed (${entries.length} entries)`);
+  console.log(`${basename(apk)} safety check passed (${entries.length} entries)`);
 }
 
 if (basename(process.argv[1] ?? "") === basename(fileURLToPath(import.meta.url))) {

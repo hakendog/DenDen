@@ -3,6 +3,8 @@ package com.tensal.denden.data
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.tensal.denden.codePointLength
+import com.tensal.denden.ellipsizeCodePoints
 import org.json.JSONArray
 
 @Entity(
@@ -40,7 +42,7 @@ data class DenDenEvent(
     val computedSummary: String
         get() {
             val text = message ?: return title ?: "DenDen"
-            return if (text.length <= 120) text else text.take(120) + "…"
+            return text.ellipsizeCodePoints(120)
         }
 
     companion object {
@@ -55,7 +57,7 @@ fun parseEventTags(raw: String?): List<String> {
         buildList {
             for (index in 0 until array.length()) {
                 val tag = array.optString(index).trim()
-                if (tag.isNotEmpty() && tag.length <= 100 && tag !in this) add(tag)
+                if (tag.isNotEmpty() && tag.codePointLength() <= 100 && tag !in this) add(tag)
                 if (size == 20) break
             }
         }

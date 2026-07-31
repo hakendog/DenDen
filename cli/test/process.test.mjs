@@ -9,6 +9,11 @@ test("Windows batch commands reject shell metacharacters before execution", { sk
   );
 });
 
+test("Windows native executables receive shell metacharacters literally", { skip: process.platform !== "win32" }, async () => {
+  const result = await runExternal("node", ["-e", "process.stdout.write(process.argv[1])", "SAFE&ver"]);
+  assert.equal(result.stdout, "SAFE&ver");
+});
+
 test("non-interactive commands time out with a resumable stage error", async () => {
   await assert.rejects(
     runExternal(process.execPath, ["-e", "setTimeout(() => {}, 10000)"], { timeoutMillis: 1_000 }),

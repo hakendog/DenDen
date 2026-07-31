@@ -6,7 +6,7 @@ import com.tensal.denden.data.DenDenEvent
 import com.tensal.denden.notification.NotificationChannels
 import com.tensal.denden.setup.DirectPairingStore
 import com.tensal.denden.setup.PairingState
-import com.tensal.denden.setup.scheduleDirectResubscribe
+import com.tensal.denden.setup.scheduleDirectPairing
 import com.tensal.denden.setup.defaultFirebaseMatches
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -24,13 +24,20 @@ class DenDenMessagingService : FirebaseMessagingService() {
             runBlocking(Dispatchers.IO) {
                 receiveDirectMessage(this@DenDenMessagingService, message.data, message.priority == RemoteMessage.PRIORITY_HIGH)
             }
+        }.onFailure {
+            SharedPrefsMessageHealthStore(this).record(
+                System.currentTimeMillis(),
+                null,
+                "message_rejected",
+                false
+            )
         }
     }
 
     override fun onNewToken(token: String) {
         val snapshot = DirectPairingStore(this).snapshot()
         if ((snapshot.state == PairingState.ACTIVE || snapshot.state == PairingState.PENDING) && defaultFirebaseMatches(snapshot)) {
-            scheduleDirectResubscribe(this)
+            scheduleDirectPairing(this)
         }
     }
 

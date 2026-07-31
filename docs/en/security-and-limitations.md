@@ -8,6 +8,8 @@ You do not register a DenDen account, and the maintainers do not operate a centr
 
 Received messages, read states, archived content, Trash, pairing information, and personal settings stay on the phone. Android cloud backup and device transfer are disabled for DenDen, so the app does not send this data to Android backup services.
 
+After decryption, message content is stored as readable text in DenDen's app-private Room database. DenDen does not add database-level encryption such as SQLCipher; protection at rest relies on the Android app sandbox, the device's screen lock, and Android device encryption. A compromised or unlocked device can expose that content.
+
 DenDen settings and sender keys are not uploaded to the maintainers. All sender computers share one least-privilege key, transferred inside an unencrypted package initially readable only by the current user.
 
 DenDen has no central synchronization service. Each phone keeps its own received content and read states. They do not sync to other phones.
@@ -38,6 +40,8 @@ Google notification services do not guarantee immediate, ordered, or successful 
 DenDen does not keep messages on a server while waiting for a phone. A phone that is offline cannot receive remote messages, and messages sent during that period do not arrive after it reconnects.
 
 If you force-stop DenDen in Android settings, you usually need to open the app yourself once before it can receive notifications again.
+
+DenDen marks notification content as private for Android's lock-screen controls. A ringing alarm can still intentionally open its full-screen title and message over the lock screen. Tasker stores the fields configured for its DenDen action, and sender commands may be visible in terminal or agent logs. Do not put passwords, access tokens, private keys, pairing codes, or other highly sensitive content in a DenDen title or message.
 
 ## Bixby and Tasker
 

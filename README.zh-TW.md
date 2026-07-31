@@ -56,6 +56,15 @@ DenDen 是一套 Android 通知系統，讓電腦、AI 助理與手機自動化�
 
 需要逐步說明時，請閱讀 [DenDen 設定助手](docs/zh-TW/setup.md)。
 
+### 兩個 AI 技能
+
+DenDen 將設定管理權限與日常通知權限分開：
+
+- `denden-setup` 負責安裝、設定、配對與管理 DenDen。
+- `denden` 只取得低權限的發送能力，用於日常發送工作結果通知。
+
+`denden-setup` 可以在首次設定或日後替 AI 助理安裝 `denden`。
+
 ## 只在手機上使用
 
 如果只使用 Samsung Bixby 或 Tasker，只需要安裝 DenDen 手機安裝檔，不需要電腦、Firebase、DenDen 配對碼或 AI 助理。

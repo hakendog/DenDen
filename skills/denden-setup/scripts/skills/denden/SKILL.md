@@ -8,7 +8,7 @@ description: Report completed, failed, partial, blocked, or reply-needed agent w
 - `<denden>` always means `node <this skill directory>/scripts/denden.mjs`. Do not use a PATH command, persistent launcher, npm package, or custom sender.
 - After substantive work completes, partially completes, fails, becomes blocked, or needs a reply, send a report before the final response and wait for its result. Do not report simple answers or status checks.
 - Before sending, run `<denden> capabilities`. Continue only when it returns `{"schemaVersion":1,"runtimeProtocol":"direct-fcm-v2","requiresAutomationToken":false}`. Otherwise stop and report that the skill is incomplete; never look for a legacy credential.
-- Map the result to `completed`, `failed`, `partial`, `blocked`, `needs-reply`, or `manual`, then run `<denden> report --event <event> --title <short title> --message <safe summary>`. Add `--duration <seconds> --duration-reliable` only for a reliable measurement.
+- Map the result to `completed`, `failed`, `partial`, `blocked`, `needs-reply`, or `manual`, then run `<denden> report --event <event> --title <short title> --message <safe summary>`. Lock screens and logs may show both fields; exclude credentials, tokens, keys, pairing codes, private paths, and sensitive content. Add `--duration <seconds> --duration-reliable` only for a reliable measurement.
 - By default, `completed` is quiet; `failed`, `partial`, `blocked`, and `needs-reply` use a standard notification; alarms are off.
 - An alarm requires an explicit user request or an exact protected user rule. Repository policy may choose only `off`, `quiet`, or `notify`; it can never authorize `ring`.
 - `<denden> stop --event-id <id>` stops the phone alarm only. It does not stop the source task.
