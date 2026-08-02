@@ -37,7 +37,7 @@ On a computer that already sends notifications, paste this into your AI assistan
 ```text
 Please follow this DenDen installation guide to load the setup assistant, then export my general notification settings for another computer:
 
-https://raw.githubusercontent.com/hakendog/DenDen/f7e563442ae2474e841a8a8df8b93238da5fabf5/docs/agent-install.md
+https://raw.githubusercontent.com/hakendog/DenDen/881d5764ec80d3a75477e9e6ac083d9473691063/docs/agent-install.md
 ```
 
 Then follow these steps:
@@ -50,7 +50,7 @@ Then follow these steps:
    ```text
    Please follow this DenDen installation guide to load the setup assistant. Then import my general notification settings, verify the shared sender permission, and install the daily DenDen notification feature:
 
-   https://raw.githubusercontent.com/hakendog/DenDen/f7e563442ae2474e841a8a8df8b93238da5fabf5/docs/agent-install.md
+   https://raw.githubusercontent.com/hakendog/DenDen/881d5764ec80d3a75477e9e6ac083d9473691063/docs/agent-install.md
    ```
 
 5. Choose the transfer package. No password is required.
