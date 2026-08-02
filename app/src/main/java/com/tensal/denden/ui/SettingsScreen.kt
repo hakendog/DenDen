@@ -367,6 +367,7 @@ fun SystemSettingsScreen(
     testInProgress: Boolean = false,
     testMessage: String? = null,
     onRunLocalTest: () -> Unit = {},
+    onRestoreBuiltInAppearance: () -> Unit = {},
     onClearPairing: () -> Unit = {},
     onBack: () -> Unit = {}
 ) {
@@ -397,13 +398,6 @@ fun SystemSettingsScreen(
                 fontWeight = FontWeight.Medium
             )
             brandingStatus?.let { status ->
-                if (status.generation > 0) Text(
-                    stringResource(R.string.denden_generation, status.generation),
-                    style = MaterialTheme.typography.bodySmall
-                )
-                status.candidateGeneration?.let {
-                    Text(stringResource(R.string.candidate_generation, it), style = MaterialTheme.typography.bodySmall)
-                }
                 status.receivingTransferFingerprint?.let { transfer ->
                     Text(
                         pluralStringResource(
@@ -423,6 +417,9 @@ fun SystemSettingsScreen(
                 status.lastError?.let {
                     Text(stringResource(R.string.brand_error_generic), color = MaterialTheme.colorScheme.error)
                 }
+            }
+            if (brandingStatus?.isCustom == true) OutlinedButton(onClick = onRestoreBuiltInAppearance) {
+                Text(stringResource(R.string.use_builtin_denden))
             }
             Text(stringResource(R.string.brand_pairing_note), style = MaterialTheme.typography.bodySmall)
         }

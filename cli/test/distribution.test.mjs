@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
-import { access, readFile, readdir } from "node:fs/promises";
-import { join } from "node:path";
+import { access, mkdir, mkdtemp, readFile, readdir, realpath, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { basename, join } from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 import { PNG } from "pngjs";
@@ -33,6 +34,26 @@ test("daily skill bundles a low-privilege CLI", async () => {
     requiresAutomationToken: false,
   });
   await assert.rejects(execFileAsync(process.execPath, [launcher, "setup", "status"], { cwd: root }), /不提供設定或整合管理命令/);
+});
+
+test("daily skill CLI can initialize the selected workspace before retrying a report", async () => {
+  const launcher = join(root, "skills/denden/scripts/denden.mjs");
+  const workspace = await mkdtemp(join(tmpdir(), "denden-workspace-"));
+  const nested = join(workspace, "nested");
+  try {
+    await mkdir(nested);
+    await assert.rejects(
+      execFileAsync(process.execPath, [launcher, "report", "--event", "completed", "--dry-run"], { cwd: nested }),
+      /找不到 \.denden\.json/,
+    );
+    const initialized = JSON.parse((await execFileAsync(process.execPath, [launcher, "channel", "init"], { cwd: workspace })).stdout);
+    const retried = JSON.parse((await execFileAsync(process.execPath, [launcher, "report", "--event", "completed", "--dry-run"], { cwd: nested })).stdout);
+    assert.equal(await realpath(initialized.path), await realpath(join(workspace, ".denden.json")));
+    assert.equal(initialized.channels[initialized.defaultChannelId].channelName, basename(workspace));
+    assert.equal(retried.channelId, initialized.defaultChannelId);
+  } finally {
+    await rm(workspace, { recursive: true, force: true });
+  }
 });
 
 test("setup skill bundles its management CLI and explicit install manifest", async () => {
@@ -109,7 +130,7 @@ test("public license, identity, version, and security metadata stay aligned", as
   const pkg = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
   const lock = JSON.parse(await readFile(join(root, "package-lock.json"), "utf8"));
   assert.deepEqual({ version: pkg.version, license: pkg.license, private: pkg.private }, {
-    version: "1.0.1",
+    version: "1.0.2",
     license: "Apache-2.0",
     private: true,
   });
@@ -125,8 +146,8 @@ test("public license, identity, version, and security metadata stay aligned", as
   assert.match(android, /namespace = "com\.tensal\.denden"/);
   assert.match(android, /applicationId = "com\.tensal\.denden"/);
   assert.doesNotMatch(android, /com\.joaomgcd:taskerpluginlibrary/);
-  assert.match(android, /versionCode = 2/);
-  assert.match(android, /versionName = "1\.0\.1"/);
+  assert.match(android, /versionCode = 3/);
+  assert.match(android, /versionName = "1\.0\.2"/);
 
   const workflow = await readFile(join(root, ".github/workflows/ci.yml"), "utf8");
   assert.match(workflow, /api-level: \[26, 35\]/);
@@ -143,6 +164,14 @@ test("public license, identity, version, and security metadata stay aligned", as
 
 test("daily skill cannot gain backend or repository ring authority", async () => {
   const skill = (await readFile(join(root, "skills/denden/SKILL.md"), "utf8")).replaceAll("\r\n", "\n");
+  const openai = await readFile(join(root, "skills/denden/agents/openai.yaml"), "utf8");
+  const frontmatter = skill.match(/^---\n([\s\S]*?)\n---\n/)?.[1] ?? "";
+  const description = frontmatter.match(/^description:\s*(.+)$/m)?.[1] ?? "";
+  assert.match(description, /^Automatically report substantive agent work to DenDen/);
+  assert.match(description, /before the final response/);
+  assert.match(description, /completed.*partial.*failed.*blocked.*user reply/);
+  assert.match(description, /simple answers.*status checks/);
+  assert.doesNotMatch(description, /Use for manual notifications/);
   assert.ok(skill.length <= 2500, `daily skill is too verbose: ${skill.length} characters`);
   assert.match(skill, /After substantive work.*before the final response.*wait for its result/);
   assert.match(skill, /Do not report simple answers or status checks/);
@@ -154,7 +183,15 @@ test("daily skill cannot gain backend or repository ring authority", async () =>
   assert.doesNotMatch(skill, /DENDEN_INSTALL_ROOT|USERPROFILE|XDG_DATA_HOME/);
   assert.match(skill, /capabilities/);
   assert.match(skill, /requiresAutomationToken/);
+  assert.match(skill, /Select the workspace containing the task's primary deliverable or inspected files/);
+  assert.match(skill, /Run every `<denden>` command from its root, never the skill directory or an arbitrary process cwd/);
+  assert.match(skill, /If none exists, run `<denden> channel init` once at the workspace root, then retry the same report/);
+  assert.match(skill, /Existing invalid config still stops; never overwrite it/);
+  assert.match(skill, /After a report succeeds, say “DenDen <quiet\|standard\|ringing> notification sent” in the user's language/);
+  assert.match(skill, /for `quiet\|notify\|ring`, respectively/);
+  assert.match(skill, /never say “FCM accepted” or imply receipt/);
   assert.doesNotMatch(skill, /agent-skills-sync|git pull/i);
+  assert.match(openai, /^policy:\r?\n  allow_implicit_invocation: true$/m);
 });
 
 test("public docs and install bootstrap stay official, pinned, and registry-independent", async () => {
@@ -203,7 +240,8 @@ test("public docs and install bootstrap stay official, pinned, and registry-inde
   assert.match(readmeZh, /自訂自己的 DenDen[\s\S]*screenshots\/zh-TW\/06-appearance\.png/);
   assert.match(readmeEn, /A Codex usage limit resets and work can continue/);
   assert.match(readmeEn, /Customize your own DenDen[\s\S]*screenshots\/en\/06-appearance\.png/);
-  assert.match(readmeZh, /手機離線時無法收到遠端訊息[\s\S]*重新連線後也不會補送/);
+  assert.match(readmeZh, /一般訊息最多 5 分鐘[\s\S]*響鈴與停止最多 1 分鐘[\s\S]*不保證送達/);
+  assert.match(readmeEn, /up to five minutes for ordinary messages[\s\S]*one minute for ring and stop[\s\S]*not guaranteed/);
   assert.match(readmeZh, /Spark 免費方案[\s\S]*不需要綁定付款方式/);
   assert.doesNotMatch(readmeZh, /## 適合使用 DenDen 的情境|接收來自電腦的遠端通知需要|Tensal/);
   assert.match(setupGuideZh, /```text[\s\S]*請根據以下 DenDen 安裝引導[\s\S]*```/);
@@ -253,8 +291,12 @@ test("public docs and install bootstrap stay official, pinned, and registry-inde
   }
   assert.doesNotMatch(readmeZh, /主要賣點|第一版|預發布|本機驗收|刻意保持不可執行|UNLICENSED/);
   const initialSkill = setup.slice(setup.indexOf("## First-time setup"), setup.indexOf("## Custom DenDen appearance"));
+  const appearanceSkill = setup.slice(setup.indexOf("## Custom DenDen appearance"), setup.indexOf("## New phones, rotation, and sender computers"));
   assert.match(initialSkill, /Obtain approval once|Do not request a second DenDen approval/);
   assert.doesNotMatch(initialSkill, /sender-auth-plan|management-revoke-plan|skill-plan/);
+  assert.match(appearanceSkill, /`setup brand apply` and `setup brand resume` as long-running commands[\s\S]*at least 180 seconds[\s\S]*bounded intervals/);
+  assert.match(appearanceSkill, /If either command times out[\s\S]*same DenDen setup process is still running[\s\S]*after it exits[\s\S]*`setup brand resume`/);
+  assert.match(appearanceSkill, /Never rerun `setup brand apply`, remove the setup lock, or delete the pending checkpoint/);
   assert.match(setup, /Choose a DenDen appearance/);
   assert.match(setup, /built-in brand and themed surface colors/);
   assert.match(setup, /optional `#RRGGBB` brand or fixed background colors/);

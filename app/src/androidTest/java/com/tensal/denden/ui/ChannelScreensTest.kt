@@ -1,12 +1,15 @@
 package com.tensal.denden.ui
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.hasStateDescription
+import com.tensal.denden.DenDenThemeMode
+import com.tensal.denden.MainScreen
 import com.tensal.denden.data.DenDenEvent
 import org.junit.Rule
 import org.junit.Assert.assertEquals
@@ -82,8 +85,8 @@ class ChannelScreensTest {
     }
 
     @Test
-    fun timelineTimestampTogglesFromRelativeToExactPerMessage() {
-        val item = event(
+    fun timelineTimestampToggleAppliesToEveryMessage() {
+        val first = event(
             id = 1,
             action = "notify",
             kind = "notification",
@@ -91,18 +94,76 @@ class ChannelScreensTest {
             title = "部署完成",
             receivedAt = System.currentTimeMillis() - 2 * 60_000
         )
+        val second = event(
+            id = 2,
+            action = "notify",
+            kind = "notification",
+            state = "delivered",
+            title = "測試完成",
+            receivedAt = System.currentTimeMillis() - 3 * 60_000
+        )
         composeRule.setContent {
             LocalizedTestTheme {
                 ChannelTimelineScreen(
                     channelId = "ops",
-                    events = listOf(item),
+                    events = listOf(first, second),
                     onBack = {}
                 )
             }
         }
 
-        composeRule.onNode(hasStateDescription("相對時間")).assertIsDisplayed().performClick()
-        composeRule.onNode(hasStateDescription("確切時間")).assertIsDisplayed()
+        composeRule.onAllNodes(hasStateDescription("相對時間")).assertCountEquals(2)[0].performClick()
+        composeRule.onAllNodes(hasStateDescription("確切時間")).assertCountEquals(2)
+    }
+
+    @Test
+    fun navigationIsImmediateAndContentReady() {
+        val message = event(
+            id = 1,
+            action = "notify",
+            kind = "notification",
+            state = "delivered",
+            title = "部署完成"
+        )
+        composeRule.setContent {
+            LocalizedTestTheme {
+                MainScreen(
+                    themeMode = DenDenThemeMode.SYSTEM,
+                    isNotificationPermissionGranted = true,
+                    canUseFullScreenIntent = true,
+                    isBatteryOptimizationIgnored = true,
+                    isNotificationPolicyAccessGranted = true,
+                    events = listOf(message)
+                )
+            }
+        }
+
+        composeRule.waitForIdle()
+        composeRule.mainClock.autoAdvance = false
+        composeRule.onNodeWithText("支付監控").performClick()
+        composeRule.mainClock.advanceTimeByFrame()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithContentDescription("返回訊息頻道").assertIsDisplayed()
+        composeRule.onNodeWithText("部署完成").assertIsDisplayed()
+        composeRule.onNodeWithText("訊息頻道").assertDoesNotExist()
+
+        composeRule.onNodeWithContentDescription("返回訊息頻道").performClick()
+        composeRule.mainClock.advanceTimeByFrame()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("訊息頻道").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("返回訊息頻道").assertDoesNotExist()
+
+        composeRule.onNodeWithContentDescription("設定").performClick()
+        composeRule.mainClock.advanceTimeByFrame()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("外觀").assertIsDisplayed()
+        composeRule.onNodeWithText("訊息頻道").assertDoesNotExist()
+
+        composeRule.onNodeWithText("系統設定").performClick()
+        composeRule.mainClock.advanceTimeByFrame()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithContentDescription("返回設定").assertIsDisplayed()
+        composeRule.onNodeWithText("外觀").assertDoesNotExist()
     }
 
     private fun event(

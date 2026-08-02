@@ -98,6 +98,7 @@ import com.tensal.denden.ui.ArchivedChannelsScreen
 import com.tensal.denden.ui.ChannelListScreen
 import com.tensal.denden.ui.ChannelInboxItem
 import com.tensal.denden.ui.ChannelTimelineScreen
+import com.tensal.denden.ui.TIMELINE_PAGE_SIZE
 import com.tensal.denden.ui.BrandCandidateDialog
 import com.tensal.denden.ui.SettingsScreen
 import com.tensal.denden.ui.SystemSettingsScreen
@@ -163,6 +164,7 @@ fun MainScreen(
     onOpenDndSettings: () -> Unit = {},
     onRunLocalTest: () -> Unit = {},
     onRefreshReadiness: () -> Unit = {},
+    onRestoreBuiltInAppearance: () -> Unit = {},
     onClearPairing: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -177,6 +179,8 @@ fun MainScreen(
     var showTrash by remember { mutableStateOf(false) }
     var selectedTrashChannelId by remember { mutableStateOf<String?>(null) }
     var settingsPage by remember { mutableStateOf(SettingsPage.HOME) }
+    var initialTimelinePage by remember { mutableStateOf<Pair<String, List<DenDenEvent>>?>(null) }
+    var timelineOpenJob by remember { mutableStateOf<Job?>(null) }
     val trashedChannelIds = trashedChannels.mapTo(mutableSetOf()) { it.channelId }
     val fallbackChannelItems = remember(events, lastReadAtByChannel) {
         events.toChannelInboxItems(lastReadAtByChannel)
@@ -185,6 +189,27 @@ fun MainScreen(
     val visibleTrashItems = trashChannelItems ?: fallbackChannelItems.filter { it.channelId in trashedChannelIds }
     val selectedChannelLatestReceivedAt = selectedChannelId?.let { channelId ->
         visibleChannelItems.firstOrNull { it.channelId == channelId }?.latestEvent?.receivedAt
+    }
+    val openTimeline: (String, (String) -> Unit) -> Unit = { channelId, onReady ->
+        if (channelItems == null) {
+            onReady(channelId)
+        } else {
+            timelineOpenJob?.cancel()
+            initialTimelinePage = null
+            timelineOpenJob = scope.launch {
+                val rows = EventDatabase.getInstance(context).messageQueryDao().getTimelinePage(
+                    channelId = channelId,
+                    query = "",
+                    filter = "all",
+                    tag = null,
+                    beforeReceivedAt = null,
+                    beforeId = null,
+                    limit = TIMELINE_PAGE_SIZE + 1
+                )
+                initialTimelinePage = channelId to rows
+                onReady(channelId)
+            }
+        }
     }
 
     LaunchedEffect(initialTab, initialChannelId, routeChangeCount, alarmActivationCount) {
@@ -306,6 +331,7 @@ fun MainScreen(
                         testInProgress = testInProgress,
                         testMessage = testMessage,
                         onRunLocalTest = onRunLocalTest,
+                        onRestoreBuiltInAppearance = onRestoreBuiltInAppearance,
                         onClearPairing = onClearPairing,
                         onBack = { settingsPage = SettingsPage.HOME }
                     )
@@ -337,8 +363,10 @@ fun MainScreen(
                             trashedChannelIds = trashedChannelIds,
                             onBack = { showArchive = false },
                             onChannelSelected = {
-                                selectedArchivedChannelId = it
-                                onChannelOpened(it)
+                                openTimeline(it) { channelId ->
+                                    selectedArchivedChannelId = channelId
+                                    onChannelOpened(channelId)
+                                }
                             },
                             onChannelUnarchived = { onChannelArchivedChange(it, false) }
                         )
@@ -347,6 +375,8 @@ fun MainScreen(
                         ChannelTimelineScreen(
                             channelId = channelId,
                             events = events.takeIf { channelItems == null },
+                            initialNewestEvents = initialTimelinePage
+                                ?.takeIf { it.first == channelId }?.second,
                             channelName = visibleChannelItems.firstOrNull { it.channelId == channelId }?.displayName,
                             onBack = { selectedArchivedChannelId = null }
                         )
@@ -356,7 +386,9 @@ fun MainScreen(
                             events = events,
                             channelItems = visibleTrashItems,
                             onBack = { showTrash = false },
-                            onChannelSelected = { selectedTrashChannelId = it },
+                            onChannelSelected = {
+                                openTimeline(it) { channelId -> selectedTrashChannelId = channelId }
+                            },
                             onRestore = { channelId ->
                                 onChannelRestored(channelId) { restored ->
                                     scope.launch {
@@ -374,6 +406,8 @@ fun MainScreen(
                         ChannelTimelineScreen(
                             channelId = channelId,
                             events = events.takeIf { channelItems == null },
+                            initialNewestEvents = initialTimelinePage
+                                ?.takeIf { it.first == channelId }?.second,
                             channelName = visibleTrashItems.firstOrNull { it.channelId == channelId }?.displayName,
                             onBack = { selectedTrashChannelId = null },
                             isInTrash = true,
@@ -446,12 +480,16 @@ fun MainScreen(
                                     }
                                 }
                             },
-                            onChannelSelected = { selectedChannelId = it }
+                            onChannelSelected = {
+                                openTimeline(it) { channelId -> selectedChannelId = channelId }
+                            }
                         )
                     } else {
                         ChannelTimelineScreen(
                             channelId = selectedChannelId!!,
                             events = events.takeIf { channelItems == null },
+                            initialNewestEvents = initialTimelinePage
+                                ?.takeIf { it.first == selectedChannelId }?.second,
                             channelName = visibleChannelItems.firstOrNull { it.channelId == selectedChannelId }?.displayName,
                             onBack = { selectedChannelId = null }
                         )
@@ -564,6 +602,7 @@ private fun DenDenTopBarIdentity(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val mascotImage = remember(mascot) { mascot?.asImageBitmap() }
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
@@ -589,8 +628,8 @@ private fun DenDenTopBarIdentity(
                 )
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    if (mascot != null) Image(
-                        bitmap = mascot.asImageBitmap(),
+                    if (mascotImage != null) Image(
+                        bitmap = mascotImage,
                         contentDescription = stringResource(R.string.custom_denden_logo),
                         modifier = Modifier.size(30.dp)
                     ) else Image(
@@ -682,8 +721,8 @@ internal fun DenDenTheme(themeMode: DenDenThemeMode, brandColor: Color? = null, 
     }
     DenDenColors.darkMode = darkTheme
     DenDenColors.brandColor = brandColor
-    MaterialTheme(
-        colorScheme = if (darkTheme) {
+    val colorScheme = remember(darkTheme, brandColor) {
+        if (darkTheme) {
             darkColorScheme(
                 primary = DenDenColors.primary,
                 onPrimary = DenDenColors.onPrimary,
@@ -719,7 +758,10 @@ internal fun DenDenTheme(themeMode: DenDenThemeMode, brandColor: Color? = null, 
                 outline = DenDenColors.outline,
                 outlineVariant = DenDenColors.outlineVariant
             )
-        },
+        }
+    }
+    MaterialTheme(
+        colorScheme = colorScheme,
         content = {
             CompositionLocalProvider(LocalContentColor provides DenDenColors.onSurface) {
                 content()
@@ -731,6 +773,9 @@ internal fun DenDenTheme(themeMode: DenDenThemeMode, brandColor: Color? = null, 
 object DenDenColors {
     var darkMode: Boolean = false
     var brandColor: Color? = null
+    private var cachedAccentSeed: Color? = null
+    private var cachedAccentBackground: Color? = null
+    private var cachedAccent: Color? = null
     val background: Color get() = if (darkMode) Color(0xFF12151A) else Color(0xFFF5F2EB)
     val surface: Color get() = if (darkMode) Color(0xFF1A1E24) else Color(0xFFFAF8F3)
     val surfaceDim: Color get() = if (darkMode) Color(0xFF12151A) else Color(0xFFE8E3D9)
@@ -739,7 +784,7 @@ object DenDenColors {
     val surfaceContainer: Color get() = if (darkMode) Color(0xFF20252C) else Color(0xFFF2EEE6)
     val surfaceContainerHigh: Color get() = if (darkMode) Color(0xFF282E36) else Color(0xFFECE7DE)
     val surfaceContainerHighest: Color get() = if (darkMode) Color(0xFF303741) else Color(0xFFE4DED4)
-    val primary: Color get() = brandColor?.let { readableAccent(it, background) }
+    val primary: Color get() = brandAccent()
         ?: if (darkMode) Color(0xFF3391FF) else Color(0xFF005FCC)
     val primaryContainer: Color get() = brandColor?.let { lerp(surface, primary, if (darkMode) 0.28f else 0.16f) }
         ?: if (darkMode) Color(0xFF183A60) else Color(0xFFDCEBFF)
@@ -765,6 +810,17 @@ object DenDenColors {
         brandColor?.let { primary.copy(alpha = 0.72f) }
             ?: if (background.luminance() > 0.5f) Color.Black.copy(alpha = 0.18f)
             else Color.White.copy(alpha = 0.24f)
+
+    private fun brandAccent(): Color? {
+        val seed = brandColor ?: return null
+        val against = background
+        if (cachedAccentSeed != seed || cachedAccentBackground != against) {
+            cachedAccentSeed = seed
+            cachedAccentBackground = against
+            cachedAccent = readableAccent(seed, against)
+        }
+        return cachedAccent
+    }
 
     private fun readableAccent(seed: Color, against: Color): Color {
         var color = seed.copy(alpha = 1f)

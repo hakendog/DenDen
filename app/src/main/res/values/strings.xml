@@ -80,8 +80,7 @@
     <string name="denden_appearance">DenDen appearance</string>
     <string name="custom_denden_active">Custom DenDen is active</string>
     <string name="builtin_denden_active">Using built-in DenDen</string>
-    <string name="denden_generation">DenDen generation: %1$d</string>
-    <string name="candidate_generation">Appearance candidate: generation %1$d · waiting for approval</string>
+    <string name="use_builtin_denden">Use built-in DenDen</string>
     <plurals name="brand_receiving">
         <item quantity="one">Receiving: %1$d/%2$d chunk · %3$s</item>
         <item quantity="other">Receiving: %1$d/%2$d chunks · %3$s</item>
@@ -171,6 +170,7 @@
     <string name="restore_channel">Restore channel</string>
     <string name="delete_permanently_from_device">Delete permanently from this device</string>
     <string name="load_older_messages">Load older messages</string>
+    <string name="loading_events">Loading events</string>
     <string name="delete_permanently_title">Delete permanently from this device?</string>
     <string name="delete_permanently_message">This cannot be undone. It deletes this device’s channel events, read state, and archive state. Local history on other devices is unaffected.</string>
     <string name="delete_permanently">Delete permanently</string>

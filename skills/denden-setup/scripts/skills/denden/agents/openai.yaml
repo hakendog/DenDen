@@ -2,3 +2,6 @@ interface:
   display_name: "DenDen"
   short_description: "Safely report agent results to the DenDen Android notification system"
   default_prompt: "Use $denden to report the result after this substantive task finishes."
+
+policy:
+  allow_implicit_invocation: true

@@ -71,6 +71,25 @@ class MessageQueryDaoTest {
     }
 
     @Test
+    fun groupedInboxPreservesNameCountsUnreadArchiveAndTrash() = runBlocking {
+        database.commit(event("one", 100, "[]").copy(channelName = "Operations"))
+        database.commit(event("two", 200, "[]").copy(channelName = ""))
+        database.messageQueryDao().upsertChannelState(ChannelState("ops", lastReadAt = 100, archived = true))
+
+        val inbox = database.messageQueryDao().observeChannelInbox().first().single()
+        assertEquals("Operations", inbox.displayName)
+        assertEquals(2, inbox.eventCount)
+        assertEquals(1, inbox.unreadCount)
+        assertTrue(inbox.archived)
+
+        database.eventDao().upsertTrashedChannel(TrashedChannel("ops", 300, 400))
+        assertTrue(database.messageQueryDao().observeChannelInbox().first().isEmpty())
+        val trash = database.messageQueryDao().observeTrashInbox().first().single()
+        assertEquals("Operations", trash.displayName)
+        assertEquals(2, trash.eventCount)
+    }
+
+    @Test
     fun capacityFixtureKeepsInboxAndInitialTimelineBounded() = runBlocking {
         val sql = database.openHelper.writableDatabase
         sql.beginTransaction()

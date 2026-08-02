@@ -12,6 +12,7 @@ import com.tensal.denden.data.DenDenEvent
 import com.tensal.denden.data.DirectEventCommit
 import com.tensal.denden.data.EventDatabase
 import com.tensal.denden.data.EventRepository
+import com.tensal.denden.messaging.notificationGroupKey
 import com.tensal.denden.notification.NotificationChannels
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -29,10 +30,11 @@ class AlarmServiceReplayTest {
     @Test
     fun preClaimForegroundNotificationHasNoFullScreenRoute() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val notification = createPreClaimAlarmNotification(context, "pre-claim", "Alarm")
+        val notification = createPreClaimAlarmNotification(context, "pre-claim", "Alarm", "ops")
 
         assertNull(notification.fullScreenIntent)
         assertEquals(NotificationChannels.QUIET_CHANNEL_ID, notification.channelId)
+        assertEquals(notificationGroupKey("ops"), notification.group)
         assertNotEquals(alarmNotificationId("pre-claim"), preClaimAlarmNotificationId("pre-claim"))
     }
 

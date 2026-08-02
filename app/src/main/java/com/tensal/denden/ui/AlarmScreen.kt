@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -460,15 +461,17 @@ private fun SlideToStop(
 ) {
     val background = mascotBackgroundColor ?: DenDenColors.mascotBackground
     val density = LocalDensity.current
+    val view = LocalView.current
     val motionTracker = remember { SnailMotionTracker() }
     var motionVelocity by remember { mutableFloatStateOf(0f) }
-    var motionSample by remember { mutableIntStateOf(0) }
-    LaunchedEffect(motionSample) {
-        if (motionSample == 0) return@LaunchedEffect
-        delay(160)
+    val settleMotion = remember(motionTracker) { Runnable {
         motionTracker.settle()
         motionVelocity = 0f
+    } }
+    DisposableEffect(view, settleMotion) {
+        onDispose { view.removeCallbacks(settleMotion) }
     }
+    val mascotImage = remember(mascot) { mascot?.asImageBitmap() }
     val motion = snailMotionTransform(motionVelocity)
     val animatedLagDp by animateFloatAsState(
         targetValue = motion.lagDp,
@@ -517,7 +520,8 @@ private fun SlideToStop(
         fractionalThreshold = 0.8f,
         onSlideFractionChanged = { progress ->
             motionVelocity = motionTracker.update(progress, SystemClock.uptimeMillis())
-            motionSample++
+            view.removeCallbacks(settleMotion)
+            view.postDelayed(settleMotion, 160)
             state.onSlideProgress(progress)
         },
         thumb = { _, _, _, size, _ ->
@@ -539,9 +543,9 @@ private fun SlideToStop(
                     .semantics { contentDescription = draggableDescription },
                 contentAlignment = Alignment.Center
             ) {
-                if (mascot != null) {
+                if (mascotImage != null) {
                     Image(
-                        bitmap = mascot.asImageBitmap(),
+                        bitmap = mascotImage,
                         contentDescription = null,
                         contentScale = ContentScale.Fit,
                         modifier = Modifier.fillMaxSize().padding(6.dp).then(mascotMotionModifier)

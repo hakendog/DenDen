@@ -37,7 +37,7 @@ The shared sender permission is limited to sending DenDen notifications. The tra
 
 Google notification services do not guarantee immediate, ordered, or successful delivery. A network outage, force-stopping DenDen, notification permission, Do Not Disturb, battery optimization, or manufacturer background limits can delay a notification, leave it only in the inbox, or prevent it from arriving.
 
-DenDen does not keep messages on a server while waiting for a phone. A phone that is offline cannot receive remote messages, and messages sent during that period do not arrive after it reconnects.
+DenDen has no history or replay server. If immediate delivery is unavailable, FCM may temporarily retain an encrypted ordinary message for up to five minutes and a ring or stop command for up to one minute. Expired messages are discarded; later recovery and guaranteed delivery remain unavailable.
 
 If you force-stop DenDen in Android settings, you usually need to open the app yourself once before it can receive notifications again.
 

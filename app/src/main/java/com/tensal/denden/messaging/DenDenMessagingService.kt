@@ -1,5 +1,8 @@
 package com.tensal.denden.messaging
 
+import android.app.Notification
+import android.app.NotificationManager
+import android.content.Context
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.tensal.denden.data.DenDenEvent
@@ -18,8 +21,6 @@ class DenDenMessagingService : FirebaseMessagingService() {
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
-        val snapshot = DirectPairingStore(this).snapshot()
-        if (snapshot.state != PairingState.ACTIVE) return
         runCatching {
             runBlocking(Dispatchers.IO) {
                 receiveDirectMessage(this@DenDenMessagingService, message.data, message.priority == RemoteMessage.PRIORITY_HIGH)
@@ -37,7 +38,7 @@ class DenDenMessagingService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         val snapshot = DirectPairingStore(this).snapshot()
         if ((snapshot.state == PairingState.ACTIVE || snapshot.state == PairingState.PENDING) && defaultFirebaseMatches(snapshot)) {
-            scheduleDirectPairing(this)
+            scheduleDirectPairing(this, snapshot.localPairingRevision)
         }
     }
 
@@ -54,6 +55,23 @@ class DenDenMessagingService : FirebaseMessagingService() {
 fun notificationGroupKey(channelId: String): String = "denden.channel.$channelId"
 fun notificationGroupSummaryId(channelId: String): Int = "summary:${notificationGroupKey(channelId)}".hashCode()
 fun notificationGroupName(event: DenDenEvent): String = event.channelDisplayName
+
+internal fun clearReadChannelNotifications(context: Context, channelId: String) {
+    runCatching {
+        val manager = context.getSystemService(NotificationManager::class.java)
+        manager.activeNotifications
+            .filter { shouldClearReadChannelNotification(it.notification.group, it.notification.flags, channelId) }
+            .forEach { notification ->
+                if (notification.tag == null) manager.cancel(notification.id)
+                else manager.cancel(notification.tag, notification.id)
+            }
+    }
+}
+
+internal fun shouldClearReadChannelNotification(group: String?, flags: Int, channelId: String): Boolean {
+    val persistentFlags = Notification.FLAG_ONGOING_EVENT or Notification.FLAG_FOREGROUND_SERVICE
+    return group == notificationGroupKey(channelId) && flags and persistentFlags == 0
+}
 
 fun notificationChannelId(event: DenDenEvent): String = when {
     event.action == "ring" || event.action == "stop" -> NotificationChannels.ALARM_CHANNEL_ID

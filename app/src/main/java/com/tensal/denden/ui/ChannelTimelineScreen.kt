@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -53,13 +54,46 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-private const val PAGE_SIZE = 100
+internal const val TIMELINE_PAGE_SIZE = 100
 private const val MAX_VISIBLE_TAGS = 50
+private val TODAY_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss", Locale.TAIWAN)
+private val DATED_TIME_FORMATTER = DateTimeFormatter.ofPattern("M/d HH:mm:ss", Locale.TAIWAN)
+
+private data class TimelineQueryKey(
+    val channelId: String,
+    val query: String,
+    val filter: String,
+    val tag: String?
+)
+
+internal fun prependOlderTimelineEvents(
+    current: List<DenDenEvent>,
+    newestFirst: List<DenDenEvent>,
+    pageSize: Int
+): List<DenDenEvent> {
+    val currentIds = current.asSequence().map(DenDenEvent::id).toHashSet()
+    return newestFirst.take(pageSize).asReversed().filterNot { it.id in currentIds } + current
+}
+
+internal fun mergeNewestTimelineEvents(
+    current: List<DenDenEvent>,
+    newestFirst: List<DenDenEvent>,
+    pageSize: Int
+): List<DenDenEvent> {
+    val newestPage = newestFirst.take(pageSize)
+    if (newestPage.isEmpty() || newestFirst.size <= pageSize) return newestPage.asReversed()
+    val boundary = newestPage.last()
+    val retainedOlder = current.filter {
+        it.receivedAt < boundary.receivedAt || it.receivedAt == boundary.receivedAt && it.id < boundary.id
+    }
+    return (retainedOlder + newestPage.asReversed()).distinctBy(DenDenEvent::id)
+}
 
 @Composable
 fun ChannelTimelineScreen(
     channelId: String,
     events: List<DenDenEvent>? = null,
+    initialNewestEvents: List<DenDenEvent>? = null,
     channelName: String? = null,
     onBack: () -> Unit,
     isInTrash: Boolean = false,
@@ -70,11 +104,18 @@ fun ChannelTimelineScreen(
     var searchExpanded by remember { mutableStateOf(false) }
     var filter by remember { mutableStateOf(TimelineFilter.ALL) }
     var selectedTag by remember { mutableStateOf<String?>(null) }
-    var loadedLimit by remember(channelId) { mutableStateOf(PAGE_SIZE) }
-    var databaseEvents by remember(channelId) { mutableStateOf<List<DenDenEvent>>(emptyList()) }
-    var hasMore by remember(channelId) { mutableStateOf(false) }
+    var databaseEvents by remember(channelId, initialNewestEvents) {
+        mutableStateOf(initialNewestEvents?.take(TIMELINE_PAGE_SIZE)?.asReversed())
+    }
+    var hasMore by remember(channelId, initialNewestEvents) {
+        mutableStateOf((initialNewestEvents?.size ?: 0) > TIMELINE_PAGE_SIZE)
+    }
+    var loadOlderRequest by remember(channelId) { mutableIntStateOf(0) }
+    var handledLoadOlderRequest by remember(channelId) { mutableIntStateOf(0) }
+    var loadedQueryKey by remember(channelId) { mutableStateOf<TimelineQueryKey?>(null) }
+    var loadedTimelineVersion by remember(channelId) { mutableStateOf<TimelineVersion?>(null) }
     var confirmPermanentDelete by remember { mutableStateOf(false) }
-    var exactTimestampEventIds by remember(channelId) { mutableStateOf(emptySet<String>()) }
+    var showExactTimestamps by remember { mutableStateOf(false) }
     var nowMillis by remember(channelId) { mutableStateOf(System.currentTimeMillis()) }
     val context = LocalContext.current
     val dao = remember(context) { EventDatabase.getInstance(context).messageQueryDao() }
@@ -84,38 +125,52 @@ fun ChannelTimelineScreen(
         .collectAsState(initial = emptyList())
     val databaseFilterValues by dao.observeChannelFilters(channelId)
         .collectAsState(initial = emptyList())
-    val inMemoryTags = events.orEmpty().asSequence()
-        .filter { it.channelId == channelId }
-        .flatMap { it.tags().asSequence() }
-        .distinct().take(MAX_VISIBLE_TAGS).toList()
-    val availableTags = if (events == null) databaseTags else inMemoryTags
-    val availableFilterValues = if (events == null) {
-        databaseFilterValues.toSet()
-    } else {
-        events.asSequence()
+    val inMemoryTags = remember(events, channelId) {
+        events.orEmpty().asSequence()
+            .filter { it.channelId == channelId }
+            .flatMap { it.tags().asSequence() }
+            .distinct().take(MAX_VISIBLE_TAGS).toList()
+    }
+    val inMemoryFilterValues = remember(events, channelId) {
+        events.orEmpty().asSequence()
             .filter { it.channelId == channelId }
             .map { it.timelineFilter().queryValue }
             .toSet()
     }
-    val availableFilters = listOf(TimelineFilter.ALL) + TimelineFilter.entries
-        .drop(1)
-        .filter { it.queryValue in availableFilterValues }
-    val timelineEvents = if (events == null) {
-        databaseEvents
+    val availableTags = if (events == null) databaseTags else inMemoryTags
+    val availableFilterValues = if (events == null) {
+        databaseFilterValues.toSet()
     } else {
-        events.filterTimeline(channelId, query, filter)
-            .filter { selectedTag == null || selectedTag in it.tags() }
+        inMemoryFilterValues
+    }
+    val availableFilters = remember(availableFilterValues) {
+        listOf(TimelineFilter.ALL) + TimelineFilter.entries
+            .drop(1)
+            .filter { it.queryValue in availableFilterValues }
+    }
+    val timelineLoading = events == null && databaseEvents == null
+    val timelineEvents = if (events == null) {
+        databaseEvents.orEmpty()
+    } else {
+        remember(events, channelId, query, filter, selectedTag) {
+            events.filterTimeline(channelId, query, filter)
+                .filter { selectedTag == null || selectedTag in it.tags() }
+        }
     }
     val displayName = channelName ?: events.orEmpty().channelDisplayName(channelId)
-    val listState = rememberLazyListState()
+    val listState = rememberLazyListState(
+        initialFirstVisibleItemIndex = timelineEvents.lastIndex.coerceAtLeast(0)
+    )
     val closeSearch = {
         query = ""
         filter = TimelineFilter.ALL
         selectedTag = null
         searchExpanded = false
     }
+    val timelineQueryKey = remember(channelId, query, filter, selectedTag) {
+        TimelineQueryKey(channelId, query.trim(), filter.queryValue, selectedTag)
+    }
 
-    LaunchedEffect(query, filter, selectedTag) { loadedLimit = PAGE_SIZE }
     LaunchedEffect(channelId) {
         while (true) {
             delay(60_000)
@@ -126,30 +181,51 @@ fun ChannelTimelineScreen(
         if (filter !in availableFilters) filter = TimelineFilter.ALL
     }
 
-    LaunchedEffect(channelId, query, filter, selectedTag, loadedLimit, timelineVersion) {
+    LaunchedEffect(timelineQueryKey, timelineVersion, loadOlderRequest) {
         if (events != null) return@LaunchedEffect
-        val newestFirst = mutableListOf<DenDenEvent>()
-        var beforeReceivedAt: Long? = null
-        var beforeId: Long? = null
-        while (newestFirst.size < loadedLimit) {
-            val requested = minOf(PAGE_SIZE, loadedLimit - newestFirst.size)
-            val page = dao.getTimelinePage(
-                channelId = channelId,
-                query = query.trim(),
-                filter = filter.queryValue,
-                tag = selectedTag,
-                beforeReceivedAt = beforeReceivedAt,
-                beforeId = beforeId,
-                limit = requested + 1
+        suspend fun page(before: DenDenEvent? = null) = dao.getTimelinePage(
+            channelId = timelineQueryKey.channelId,
+            query = timelineQueryKey.query,
+            filter = timelineQueryKey.filter,
+            tag = timelineQueryKey.tag,
+            beforeReceivedAt = before?.receivedAt,
+            beforeId = before?.id,
+            limit = TIMELINE_PAGE_SIZE + 1
+        )
+
+        val previousVersion = loadedTimelineVersion
+        val queryChanged = loadedQueryKey != timelineQueryKey
+        val latestId = timelineVersion.latestId
+        val previousLatestId = previousVersion?.latestId
+        val dataShrank = previousVersion != null && (
+            timelineVersion.eventCount < previousVersion.eventCount ||
+                (previousLatestId != null && (latestId == null || latestId < previousLatestId))
             )
-            newestFirst += page.take(requested)
-            hasMore = page.size > requested
-            if (page.size <= requested || newestFirst.isEmpty()) break
-            val oldest = newestFirst.last()
-            beforeReceivedAt = oldest.receivedAt
-            beforeId = oldest.id
+        if (queryChanged || previousVersion == null || dataShrank) {
+            val rows = page()
+            databaseEvents = rows.take(TIMELINE_PAGE_SIZE).asReversed()
+            hasMore = rows.size > TIMELINE_PAGE_SIZE
+            handledLoadOlderRequest = loadOlderRequest
+        } else {
+            var nextEvents = databaseEvents.orEmpty()
+            var nextHasMore = hasMore
+            if (timelineVersion != previousVersion) {
+                val rows = page()
+                val hadLoadedEvents = nextEvents.isNotEmpty()
+                nextEvents = mergeNewestTimelineEvents(nextEvents, rows, TIMELINE_PAGE_SIZE)
+                if (!hadLoadedEvents) nextHasMore = rows.size > TIMELINE_PAGE_SIZE
+            }
+            if (loadOlderRequest != handledLoadOlderRequest && nextHasMore) {
+                val rows = page(nextEvents.firstOrNull())
+                nextEvents = prependOlderTimelineEvents(nextEvents, rows, TIMELINE_PAGE_SIZE)
+                nextHasMore = rows.size > TIMELINE_PAGE_SIZE
+            }
+            databaseEvents = nextEvents
+            hasMore = nextHasMore
+            handledLoadOlderRequest = loadOlderRequest
         }
-        databaseEvents = newestFirst.asReversed()
+        loadedQueryKey = timelineQueryKey
+        loadedTimelineVersion = timelineVersion
     }
 
     LaunchedEffect(channelId, timelineEvents.isNotEmpty()) {
@@ -283,10 +359,10 @@ fun ChannelTimelineScreen(
         }
 
         Box(modifier = Modifier.weight(1f)) {
-            if (timelineEvents.isEmpty()) {
-                EmptyTimeline()
-            } else {
-                LazyColumn(
+            when {
+                timelineLoading -> LoadingTimeline()
+                timelineEvents.isEmpty() -> EmptyTimeline()
+                else -> LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     state = listState,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -294,24 +370,17 @@ fun ChannelTimelineScreen(
                     if (events == null && hasMore) {
                         item(key = "load-older") {
                             TextButton(
-                                onClick = { loadedLimit += PAGE_SIZE },
+                                onClick = { loadOlderRequest++ },
                                 modifier = Modifier.fillMaxWidth()
                             ) { Text(stringResource(R.string.load_older_messages)) }
                         }
                     }
                     items(timelineEvents, key = { it.id }) { event ->
-                        val timestampKey = event.eventId ?: "${event.id}:${event.receivedAt}"
                         TimelineEventCard(
                             event = event,
                             nowMillis = nowMillis,
-                            showExactTime = timestampKey in exactTimestampEventIds,
-                            onToggleTime = {
-                                exactTimestampEventIds = if (timestampKey in exactTimestampEventIds) {
-                                    exactTimestampEventIds - timestampKey
-                                } else {
-                                    exactTimestampEventIds + timestampKey
-                                }
-                            }
+                            showExactTime = showExactTimestamps,
+                            onToggleTime = { showExactTimestamps = !showExactTimestamps }
                         )
                     }
                 }
@@ -397,6 +466,20 @@ private fun TimelineFilterChips(
 }
 
 @Composable
+private fun LoadingTimeline() {
+    val label = stringResource(R.string.loading_events)
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier.semantics { contentDescription = label },
+            color = DenDenColors.primary
+        )
+    }
+}
+
+@Composable
 private fun EmptyTimeline() {
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -447,10 +530,11 @@ private fun TimelineEventCard(
     val exactTimeLabel = stringResource(R.string.show_exact_time)
     val exactState = stringResource(R.string.exact_time)
     val relativeState = stringResource(R.string.relative_time)
-    val timestampDescription = timelineTimestampContentDescription(
-        event.receivedAt,
-        locale = Locale.getDefault()
-    )
+    val locale = Locale.getDefault()
+    val timestampDescription = remember(event.receivedAt, locale) {
+        timelineTimestampContentDescription(event.receivedAt, locale = locale)
+    }
+    val tags = remember(event.tagsJson) { event.tags() }
     val title = event.title?.takeIf { it.isNotBlank() }
     val message = event.message?.takeIf { it.isNotBlank() }
 
@@ -530,7 +614,6 @@ private fun TimelineEventCard(
                 )
             }
 
-            val tags = event.tags()
             if (tags.isNotEmpty()) {
                 Row(
                     modifier = Modifier
@@ -565,8 +648,7 @@ internal fun formatTimelineTimestamp(
 ): String {
     val time = Instant.ofEpochMilli(timestamp).atZone(zoneId)
     val today = Instant.ofEpochMilli(now).atZone(zoneId).toLocalDate()
-    val pattern = if (time.toLocalDate() == today) "HH:mm:ss" else "M/d HH:mm:ss"
-    return time.format(DateTimeFormatter.ofPattern(pattern, Locale.TAIWAN))
+    return time.format(if (time.toLocalDate() == today) TODAY_TIME_FORMATTER else DATED_TIME_FORMATTER)
 }
 
 internal fun timelineTimestampContentDescription(

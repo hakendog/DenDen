@@ -1,6 +1,7 @@
 package com.tensal.denden.messaging
 
 import android.Manifest
+import android.app.Notification
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
@@ -287,33 +288,64 @@ internal suspend fun dispatchDirectEvent(
 
 private fun showDirectNotification(context: Context, event: DenDenEvent): Boolean {
     if (!directNotificationAvailable(context, event)) return false
-    val channelId = notificationChannelId(event)
-    val intent = PendingIntent.getActivity(
-        context,
-        event.eventId.hashCode(),
-        Intent(context, MainActivity::class.java).apply {
-            putExtra(MainActivity.EXTRA_OPEN_CHANNEL_ID, event.channelId)
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        },
-        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-    )
-    val notification = NotificationCompat.Builder(context, channelId)
-        .applyDenDenBranding(context)
-        .setContentTitle(event.title ?: "DenDen")
-        .setContentText(event.computedSummary)
-        .setSubText(event.channelDisplayName)
-        .setContentIntent(intent)
-        .setAutoCancel(true)
-        .setSilent(event.notificationMode == "quiet")
-        .setPriority(if (event.action == "ring") NotificationCompat.PRIORITY_HIGH else NotificationCompat.PRIORITY_DEFAULT)
-        .build()
+    val contentIntent = directNotificationContentIntent(context, event)
+    val notification = createDirectNotification(context, event, contentIntent)
+    val summary = createDirectNotificationGroupSummary(context, event, contentIntent)
     return try {
-        NotificationManagerCompat.from(context).notify(event.eventId.hashCode(), notification)
+        NotificationManagerCompat.from(context).apply {
+            notify(event.eventId.hashCode(), notification)
+            notify(notificationGroupSummaryId(event.channelId), summary)
+        }
         true
     } catch (_: SecurityException) {
         false
     }
 }
+
+private fun directNotificationContentIntent(context: Context, event: DenDenEvent): PendingIntent =
+    PendingIntent.getActivity(
+        context,
+        event.eventId.hashCode(),
+        Intent(context, MainActivity::class.java).apply {
+            putExtra(MainActivity.EXTRA_OPEN_CHANNEL_ID, event.channelId)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        },
+        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+    )
+
+internal fun createDirectNotification(
+    context: Context,
+    event: DenDenEvent,
+    contentIntent: PendingIntent = directNotificationContentIntent(context, event)
+): Notification = NotificationCompat.Builder(context, notificationChannelId(event))
+    .applyDenDenBranding(context)
+    .setContentTitle(event.title ?: "DenDen")
+    .setContentText(event.computedSummary)
+    .setSubText(event.channelDisplayName)
+    .setContentIntent(contentIntent)
+    .setAutoCancel(true)
+    .setGroup(notificationGroupKey(event.channelId))
+    .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
+    .setSilent(event.notificationMode == "quiet")
+    .setPriority(if (event.action == "ring") NotificationCompat.PRIORITY_HIGH else NotificationCompat.PRIORITY_DEFAULT)
+    .build()
+
+internal fun createDirectNotificationGroupSummary(
+    context: Context,
+    event: DenDenEvent,
+    contentIntent: PendingIntent = directNotificationContentIntent(context, event)
+): Notification = NotificationCompat.Builder(context, notificationChannelId(event))
+    .applyDenDenBranding(context)
+    .setContentTitle(notificationGroupName(event))
+    .setContentText(event.computedSummary)
+    .setContentIntent(contentIntent)
+    .setAutoCancel(true)
+    .setGroup(notificationGroupKey(event.channelId))
+    .setGroupSummary(true)
+    .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
+    .setSilent(true)
+    .setPriority(NotificationCompat.PRIORITY_LOW)
+    .build()
 
 private fun directNotificationAvailable(context: Context, event: DenDenEvent): Boolean {
     if (Build.VERSION.SDK_INT >= 33 &&
@@ -384,7 +416,7 @@ private fun enqueueDirectSideEffect(
 fun reconcileDirectMessages(context: Context) {
     WorkManager.getInstance(context).enqueueUniqueWork(
         "denden-direct-reconciliation",
-        ExistingWorkPolicy.REPLACE,
+        ExistingWorkPolicy.KEEP,
         OneTimeWorkRequestBuilder<DirectMessageReconciliationWorker>().build()
     )
 }

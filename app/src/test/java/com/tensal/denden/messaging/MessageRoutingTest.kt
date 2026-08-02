@@ -1,5 +1,6 @@
 package com.tensal.denden.messaging
 
+import android.app.Notification
 import com.tensal.denden.data.DenDenEvent
 import com.tensal.denden.notification.NotificationChannels
 import org.junit.Assert.assertEquals
@@ -16,6 +17,17 @@ class MessageRoutingTest {
         assertEquals(NotificationChannels.QUIET_CHANNEL_ID, notificationChannelId(event.copy(notificationMode = "quiet")))
         assertEquals(NotificationChannels.ALARM_CHANNEL_ID, notificationChannelId(event.copy(action = "ring")))
         assertTrue(notificationGroupKey("a") != notificationGroupKey("b"))
+    }
+
+    @Test
+    fun readingChannelClearsOnlyItsDismissibleNotifications() {
+        val opsGroup = notificationGroupKey("ops")
+
+        assertTrue(shouldClearReadChannelNotification(opsGroup, 0, "ops"))
+        assertTrue(shouldClearReadChannelNotification(opsGroup, Notification.FLAG_GROUP_SUMMARY, "ops"))
+        assertFalse(shouldClearReadChannelNotification(notificationGroupKey("product"), 0, "ops"))
+        assertFalse(shouldClearReadChannelNotification(opsGroup, Notification.FLAG_ONGOING_EVENT, "ops"))
+        assertFalse(shouldClearReadChannelNotification(opsGroup, Notification.FLAG_FOREGROUND_SERVICE, "ops"))
     }
 
     @Test

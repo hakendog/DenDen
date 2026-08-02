@@ -123,6 +123,35 @@ class ChannelUiStateTest {
     }
 
     @Test
+    fun `older timeline page prepends without rereading current events`() {
+        val current = listOf(
+            event(receivedAt = 300).copy(id = 3),
+            event(receivedAt = 400).copy(id = 4)
+        )
+        val olderNewestFirst = listOf(
+            event(receivedAt = 200).copy(id = 2),
+            event(receivedAt = 100).copy(id = 1)
+        )
+
+        assertEquals(listOf(1L, 2L, 3L, 4L), prependOlderTimelineEvents(current, olderNewestFirst, 2).map { it.id })
+    }
+
+    @Test
+    fun `newest timeline refresh replaces only its loaded window`() {
+        val current = (1L..5L).map { id -> event(receivedAt = id * 100).copy(id = id) }
+        val newestFirst = listOf(
+            event(receivedAt = 600).copy(id = 6),
+            event(receivedAt = 500).copy(id = 5, state = "stopped"),
+            event(receivedAt = 400).copy(id = 4)
+        )
+
+        val merged = mergeNewestTimelineEvents(current, newestFirst, 2)
+
+        assertEquals(listOf(1L, 2L, 3L, 4L, 5L, 6L), merged.map { it.id })
+        assertEquals("stopped", merged.first { it.id == 5L }.state)
+    }
+
+    @Test
     fun `channel search preserves unread count`() {
         val events = listOf(
             event(channelId = "alpha", receivedAt = 1000),

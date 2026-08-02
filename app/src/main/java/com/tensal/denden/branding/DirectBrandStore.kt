@@ -18,10 +18,19 @@ class DirectBrandStore(context: Context) {
     private val staging = File(root, "staging")
     private val active = File(root, "active")
     private val prefs = appContext.getSharedPreferences("direct_branding", Context.MODE_PRIVATE)
+    private var cachedBrandingKey: String? = null
+    private var cachedBranding: CachedBranding? = null
+    private var cachedCandidateKey: String? = null
+    private var cachedCandidate: DirectBrandCandidate? = null
 
     fun activatePairing(pairingId: String) = synchronized(LOCK) { ensurePairing(pairingId) }
 
     fun clearPairing() = synchronized(LOCK) {
+        cachedBrandingKey = null
+        cachedBranding = null
+        cachedCandidateKey = null
+        cachedCandidate = null
+        if (!root.exists() && prefs.all.isEmpty()) return@synchronized
         staging.deleteRecursively()
         active.deleteRecursively()
         root.listFiles()?.filter { it.isDirectory && it.name.startsWith("revision-") }?.forEach(File::deleteRecursively)
@@ -47,24 +56,43 @@ class DirectBrandStore(context: Context) {
     fun load(expectedPairingId: String? = currentPairingId()): CachedBranding? = synchronized(LOCK) {
         if (!matchesPairing(expectedPairingId)) return null
         val revision = prefs.getString(REVISION_KEY, null) ?: return null
+        val cacheKey = "${prefs.getString(PAIRING_KEY, null)}:$revision"
+        if (cachedBrandingKey == cacheKey) return cachedBranding
         val directory = activeDirectory(revision)
         val mascot = decode(File(directory, "mascot.png"), 512, 512) ?: return null
-        val shortcut = decode(File(directory, "shortcut.png"), 432, 432) ?: return null
         val brandColorValue = prefs.getString(BRAND_COLOR_KEY, null)
         val backgroundColorValue = prefs.getString(BACKGROUND_COLOR_KEY, null)
         val brandColor = brandColorValue?.let { runCatching { Color.parseColor(it) }.getOrNull() ?: return null }
         val backgroundColor = backgroundColorValue?.let { runCatching { Color.parseColor(it) }.getOrNull() ?: return null }
-        CachedBranding(revision, brandColor, backgroundColor, mascot, shortcut)
+        CachedBranding(revision, brandColor, backgroundColor, mascot).also {
+            cachedBrandingKey = cacheKey
+            cachedBranding = it
+        }
+    }
+
+    fun loadShortcut(expectedPairingId: String? = currentPairingId()): Bitmap? = synchronized(LOCK) {
+        if (!matchesPairing(expectedPairingId)) return null
+        val revision = prefs.getString(REVISION_KEY, null) ?: return null
+        decode(File(activeDirectory(revision), "shortcut.png"), 432, 432)
     }
 
     fun candidate(expectedPairingId: String? = currentPairingId()): DirectBrandCandidate? = synchronized(LOCK) {
         if (!matchesPairing(expectedPairingId)) return null
         val generation = prefs.getLong(CANDIDATE_GENERATION_KEY, 0).takeIf { it > 0 } ?: return null
-        if (prefs.getString(CANDIDATE_CONTENT_DIGEST_KEY, null) == null) {
+        val contentDigest = prefs.getString(CANDIDATE_CONTENT_DIGEST_KEY, null)
+        if (contentDigest == null) {
             return discardInvalidCandidate("外觀候選狀態不完整，請重送")
         }
+        val cacheKey = "${prefs.getString(PAIRING_KEY, null)}:$generation:$contentDigest"
+        val cached = cachedCandidate
+        if (cachedCandidateKey == cacheKey && cached != null &&
+            (cached.isReset || File(root, "revision-${cached.revision}/mascot.png").isFile)
+        ) return cached
         if (prefs.getBoolean(CANDIDATE_RESET_KEY, false)) {
-            return DirectBrandCandidate(generation, null, true, null, null, null)
+            return DirectBrandCandidate(generation, null, true, null, null, null).also {
+                cachedCandidateKey = cacheKey
+                cachedCandidate = it
+            }
         }
         val revision = prefs.getString(CANDIDATE_REVISION_KEY, null)
             ?: return discardInvalidCandidate("外觀候選狀態不完整，請重送")
@@ -84,7 +112,10 @@ class DirectBrandStore(context: Context) {
             brandColor = brandColor,
             backgroundColor = backgroundColor,
             mascot = mascot
-        )
+        ).also {
+            cachedCandidateKey = cacheKey
+            cachedCandidate = it
+        }
     }
 
     fun applyCandidate(expectedPairingId: String? = currentPairingId()): Boolean = synchronized(LOCK) {
@@ -121,6 +152,10 @@ class DirectBrandStore(context: Context) {
                 else editor.putString(BACKGROUND_COLOR_KEY, colorString(candidate.backgroundColor))
             }
             check(editor.commit()) { "外觀套用狀態保存失敗" }
+            cachedBrandingKey = null
+            cachedBranding = null
+            cachedCandidateKey = null
+            cachedCandidate = null
             val activeRevision = candidate.revision
             root.listFiles()?.filter {
                 it.isDirectory && it.name.startsWith("revision-") && it.name != "revision-$activeRevision"
@@ -129,6 +164,29 @@ class DirectBrandStore(context: Context) {
             true
         } catch (error: Exception) {
             prefs.edit().putString(LAST_ERROR_KEY, error.message?.take(160) ?: "外觀套用失敗").commit()
+            throw error
+        }
+    }
+
+    fun restoreBuiltIn(expectedPairingId: String? = currentPairingId()): Boolean = synchronized(LOCK) {
+        try {
+            if (!matchesPairing(expectedPairingId)) return false
+            val revision = prefs.getString(REVISION_KEY, null) ?: return false
+            check(prefs.edit()
+                .remove(REVISION_KEY)
+                .remove(CONTENT_DIGEST_KEY)
+                .remove(BRAND_COLOR_KEY)
+                .remove(BACKGROUND_COLOR_KEY)
+                .putBoolean(SHORTCUT_PENDING_KEY, true)
+                .remove(LAST_ERROR_KEY)
+                .commit()) { "內建外觀狀態保存失敗" }
+            cachedBrandingKey = null
+            cachedBranding = null
+            File(root, "revision-$revision").deleteRecursively()
+            active.deleteRecursively()
+            true
+        } catch (error: Exception) {
+            prefs.edit().putString(LAST_ERROR_KEY, error.message?.take(160) ?: "內建外觀恢復失敗").commit()
             throw error
         }
     }
@@ -147,6 +205,8 @@ class DirectBrandStore(context: Context) {
             .commit()) { "外觀拒絕狀態保存失敗" }
         candidate.revision?.takeIf { it != prefs.getString(REVISION_KEY, null) }
             ?.let { File(root, "revision-$it").deleteRecursively() }
+        cachedCandidateKey = null
+        cachedCandidate = null
         true
     }
 
@@ -390,6 +450,8 @@ class DirectBrandStore(context: Context) {
     )
 
     private fun discardInvalidCandidate(message: String): DirectBrandCandidate? {
+        cachedCandidateKey = null
+        cachedCandidate = null
         val revision = prefs.getString(CANDIDATE_REVISION_KEY, null)
         check(prefs.edit()
             .remove(CANDIDATE_GENERATION_KEY)
@@ -409,6 +471,10 @@ class DirectBrandStore(context: Context) {
         val pairingFingerprint = sha256(pairingId.toByteArray())
         val existing = prefs.getString(PAIRING_KEY, null)
         if (existing == pairingFingerprint) return
+        cachedBrandingKey = null
+        cachedBranding = null
+        cachedCandidateKey = null
+        cachedCandidate = null
         staging.deleteRecursively()
         active.deleteRecursively()
         root.listFiles()?.filter { it.isDirectory && it.name.startsWith("revision-") }?.forEach(File::deleteRecursively)

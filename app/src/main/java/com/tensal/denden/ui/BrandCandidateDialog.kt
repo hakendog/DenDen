@@ -10,6 +10,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,6 +29,7 @@ fun BrandCandidateDialog(
     onAccept: () -> Unit,
     onReject: () -> Unit
 ) {
+    val mascotImage = remember(candidate.mascot) { candidate.mascot?.asImageBitmap() }
     val title = stringResource(if (candidate.isReset) R.string.brand_restore_title else R.string.brand_apply_title)
     val message = stringResource(if (candidate.isReset) R.string.brand_restore_message else R.string.brand_apply_message)
     val previewDescription = stringResource(
@@ -40,9 +42,9 @@ fun BrandCandidateDialog(
         title = { Text(title) },
         text = {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                if (candidate.mascot != null) {
+                if (mascotImage != null) {
                     Image(
-                        bitmap = candidate.mascot.asImageBitmap(),
+                        bitmap = mascotImage,
                         contentDescription = previewDescription,
                         modifier = Modifier
                             .size(180.dp)
