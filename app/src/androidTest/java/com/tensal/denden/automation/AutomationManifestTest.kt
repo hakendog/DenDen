@@ -3,6 +3,7 @@ package com.tensal.denden.automation
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.pm.ShortcutManager
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -38,6 +39,7 @@ class AutomationManifestTest {
         val packageManager = context.packageManager
         val main = packageManager.getActivityInfo(ComponentName(context, MainActivity::class.java), 0)
         assertFalse(main.exported)
+        assertEquals(ActivityInfo.LAUNCH_SINGLE_TASK, main.launchMode)
         val launcher = packageManager.getActivityInfo(ComponentName(context, LauncherActivity::class.java), 0)
         assertTrue(launcher.exported)
         val trampoline = packageManager.getActivityInfo(ComponentName(context, BixbyAutomationActivity::class.java), 0)

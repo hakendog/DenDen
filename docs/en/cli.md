@@ -67,7 +67,7 @@ denden channel use --channel-id ID
 denden channel remove --channel-id ID
 ```
 
-`init` creates `.denden.json` in the current directory and refuses to overwrite an existing file. The CLI does not allow removing the current default message channel.
+`init` creates `.denden.json` in the current directory. When `--name` is omitted, it uses the current directory's folder name. It refuses to overwrite an existing file. The CLI does not allow removing the current default message channel.
 
 ## Notification presets
 

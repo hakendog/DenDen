@@ -28,7 +28,7 @@ fun scheduleLocalTrashCleanup(context: Context) {
     val request = PeriodicWorkRequestBuilder<LocalTrashCleanupWorker>(1, TimeUnit.DAYS).build()
     WorkManager.getInstance(context).enqueueUniquePeriodicWork(
         "denden-local-trash-cleanup",
-        ExistingPeriodicWorkPolicy.UPDATE,
+        ExistingPeriodicWorkPolicy.KEEP,
         request
     )
 }

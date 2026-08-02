@@ -192,9 +192,9 @@ export async function writeRepoJson(path, value) {
   await writeFile(path, `${JSON.stringify(value, null, 2)}\n`, "utf8");
 }
 
-export function createRepoConfig(channelId = randomUUID(), channelName = "main") {
+export function createRepoConfig(channelId = randomUUID(), channelName) {
   const id = channelId.trim();
-  const name = channelName.trim();
+  const name = String(channelName || "").trim();
   if (!id || !name) throw new Error("Channel ID 與名稱不得空白");
   return { defaultChannelId: id, channels: { [id]: { channelId: id, channelName: name } } };
 }

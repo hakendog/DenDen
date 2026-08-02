@@ -152,7 +152,7 @@ export function inspectPublicRepository(expectedCommits = null, cwd = process.cw
     .trim().split(/\r?\n/).filter(Boolean);
   for (const ref of refs) {
     if (/(^|\/)dev$/.test(ref)) failures.push(`${ref}: 公開 repository 禁止 dev 分支`);
-    if (ref.startsWith("refs/tags/") && !new Set(["refs/tags/v1.0.0", "refs/tags/v1.0.1"]).has(ref)) {
+    if (ref.startsWith("refs/tags/") && !new Set(["refs/tags/v1.0.0", "refs/tags/v1.0.1", "refs/tags/v1.0.2"]).has(ref)) {
       failures.push(`${ref}: 非預期公開 tag`);
     }
   }

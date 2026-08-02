@@ -60,8 +60,10 @@ class DirectPairingWorker(context: Context, params: WorkerParameters) : Coroutin
     }
 }
 
-fun scheduleDirectPairing(context: Context) {
-    val revision = DirectPairingStore(context).snapshot().localPairingRevision
+fun scheduleDirectPairing(
+    context: Context,
+    revision: Long = DirectPairingStore(context).snapshot().localPairingRevision
+) {
     WorkManager.getInstance(context).enqueueUniqueWork(
         DirectPairingWorker.WORK_NAME,
         ExistingWorkPolicy.REPLACE,
@@ -124,9 +126,9 @@ suspend fun resubscribeActiveDirectPairing(
 
 fun initializeDirectFirebaseRuntime(
     context: Context,
-    store: DirectPairingStore = DirectPairingStore(context)
+    store: DirectPairingStore = DirectPairingStore(context),
+    snapshot: DirectPairingSnapshot = store.snapshot()
 ): Boolean {
-    val snapshot = store.snapshot()
     val target = when {
         snapshot.state == PairingState.ACTIVE -> snapshot.active
         snapshot.state == PairingState.PENDING && snapshot.phase == PairingPhase.SUBSCRIBE -> snapshot.candidate

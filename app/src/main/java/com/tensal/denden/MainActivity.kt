@@ -51,7 +51,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.core.view.WindowCompat
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
@@ -60,7 +62,6 @@ import com.tensal.denden.alarm.AlarmController
 import com.tensal.denden.alarm.AlarmRuntime
 import com.tensal.denden.alarm.AlarmService
 import com.tensal.denden.alarm.isTerminalFor
-import com.tensal.denden.automation.reconcileLocalAutomation
 import com.tensal.denden.branding.CachedBranding
 import com.tensal.denden.branding.DirectBrandCandidate
 import com.tensal.denden.branding.DirectBrandStore
@@ -76,13 +77,14 @@ import com.tensal.denden.data.TrashedChannel
 import com.tensal.denden.data.cleanupExpiredLocalTrash
 import com.tensal.denden.data.finishPendingTrashCleanup
 import com.tensal.denden.messaging.SharedPrefsMessageHealthStore
-import com.tensal.denden.messaging.reconcileDirectMessages
+import com.tensal.denden.messaging.clearReadChannelNotifications
 import com.tensal.denden.notification.NotificationChannels
 import com.tensal.denden.readiness.ReadinessSnapshot
 import com.tensal.denden.readiness.TestExecutionStore
 import com.tensal.denden.readiness.buildDirectReadinessSnapshot
 import com.tensal.denden.readiness.awaitLocalTestConfirmation
 import com.tensal.denden.setup.DirectPairingStore
+import com.tensal.denden.setup.DirectPairingSnapshot
 import com.tensal.denden.setup.PairingState
 import com.tensal.denden.setup.directRuntimeMutex
 import com.tensal.denden.setup.initializeDirectFirebaseRuntime
@@ -149,6 +151,7 @@ class MainActivity : ComponentActivity() {
     private var testInProgress by mutableStateOf(false)
     private var testMessage by mutableStateOf<String?>(null)
     private var isPaired by mutableStateOf(false)
+    private var activePairingId: String? = null
     private var localModeEnabled by mutableStateOf(false)
     private var forceSetup by mutableStateOf(false)
     private var directProjectId by mutableStateOf<String?>(null)
@@ -162,12 +165,13 @@ class MainActivity : ComponentActivity() {
     private val pairingAttemptGuard = PairingAttemptGuard()
     private val pairingAttemptMutex = Mutex()
     private var pairingJob: Job? = null
+    private var trashCleanupJob: Job? = null
     private var stopObservingPairingState: (() -> Unit)? = null
     private var brandReceiverRegistered = false
     private val brandChangedReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            pendingBrandCandidate = directBrandingStore.candidate()
-            directBrandStatus = directBrandingStore.status()
+            pendingBrandCandidate = directBrandingStore.candidate(activePairingId)
+            directBrandStatus = directBrandingStore.status(activePairingId)
         }
     }
 
@@ -200,8 +204,6 @@ class MainActivity : ComponentActivity() {
         testExecutionStore = TestExecutionStore(this)
         directPairingStore = DirectPairingStore(this)
         directBrandingStore = DirectBrandStore(this)
-        cachedBranding = directBrandingStore.load()
-        directBrandStatus = directBrandingStore.status()
         NotificationChannels.create(this)
         val appPrefs = getSharedPreferences(APP_SETTINGS_PREFS, Context.MODE_PRIVATE)
         themeMode = DenDenThemeMode.fromStorage(
@@ -300,6 +302,7 @@ class MainActivity : ComponentActivity() {
                     onChannelPermanentlyDeleted = ::permanentlyDeleteChannel,
                     onAlarmRouteEnded = {
                         applyAlarmWindowFlags(false)
+                        clearAlarmRouteIntent()
                         currentTab = Tab.CHANNELS
                         activeAlarmPayload = null
                         alarmBrandingSnapshot = null
@@ -313,6 +316,7 @@ class MainActivity : ComponentActivity() {
                     onOpenDndSettings = ::openDndSettings,
                     onRunLocalTest = ::runLocalTest,
                     onRefreshReadiness = ::refreshReadiness,
+                    onRestoreBuiltInAppearance = ::restoreBuiltInAppearance,
                     onClearPairing = ::managePairing,
                 )
                     pendingBrandCandidate?.let { candidate ->
@@ -330,6 +334,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent)
         val alarmEventId = intent.getStringExtra(AlarmService.EXTRA_EVENT_ID)?.takeIf(String::isNotBlank)
         val isAlarmRoute = alarmEventId != null &&
             intent.getStringExtra("open_tab") == "ALARM" &&
@@ -347,8 +352,13 @@ class MainActivity : ComponentActivity() {
             currentTab = Tab.CHANNELS
             requestedChannelId = intent.getStringExtra(EXTRA_OPEN_CHANNEL_ID)
             routeChangeCount = routeChangeCount + 1
+            activeAlarmPayload = null
             alarmBrandingSnapshot = null
         }
+    }
+
+    private fun clearAlarmRouteIntent() {
+        setIntent(Intent(this, MainActivity::class.java))
     }
 
     private fun updateThemeMode(mode: DenDenThemeMode) {
@@ -447,17 +457,19 @@ class MainActivity : ComponentActivity() {
                     runCatching { directBrandingStore.clearPairing() }
                 }
                 resumeDirectPairing(this@MainActivity, directPairingStore)
-                check(directPairingStore.snapshot().state == PairingState.ACTIVE) {
-                    getString(R.string.topic_subscription_incomplete)
+                directPairingStore.snapshot().also { active ->
+                    check(active.state == PairingState.ACTIVE) {
+                        getString(R.string.topic_subscription_incomplete)
+                    }
                 }
             }
-            val afterAttempt = directPairingStore.snapshot()
+            val afterAttempt = result.getOrElse { directPairingStore.snapshot() }
             if (afterAttempt.state == PairingState.PENDING || afterAttempt.state == PairingState.ERROR) {
-                scheduleDirectPairing(this@MainActivity)
+                scheduleDirectPairing(this@MainActivity, afterAttempt.localPairingRevision)
             }
             if (!isActive || !pairingAttemptGuard.isCurrent(attempt)) return@launchPairingAttempt
-            result.onSuccess {
-                showActivePairing()
+            result.onSuccess { active ->
+                showActivePairing(active)
             }.onFailure {
                 setupDisplayState = SetupDisplayState(
                     status = getString(R.string.pairing_failed_retry)
@@ -474,10 +486,13 @@ class MainActivity : ComponentActivity() {
                 status = getString(R.string.pairing_recovering)
             )
             launchPairingAttempt { attempt ->
-                val result = runCatching { resumeDirectPairing(this@MainActivity, directPairingStore) }
+                val result = runCatching {
+                    resumeDirectPairing(this@MainActivity, directPairingStore)
+                    directPairingStore.snapshot()
+                }
                 if (!isActive || !pairingAttemptGuard.isCurrent(attempt)) return@launchPairingAttempt
-                result.onSuccess {
-                    refreshStoredPairingState()
+                result.onSuccess { recovered ->
+                    refreshStoredPairingState(recovered)
                     setupDisplayState = if (isPaired) SetupDisplayState() else SetupDisplayState(
                         status = getString(R.string.pairing_incomplete)
                     )
@@ -508,9 +523,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        reconcileDirectMessages(this)
-        reconcileLocalAutomation(this)
-        refreshStoredPairingState()
         refreshPermissionStates()
         cleanupLocalTrash()
         refreshReadiness()
@@ -520,8 +532,10 @@ class MainActivity : ComponentActivity() {
         super.onStart()
         if (stopObservingPairingState == null) {
             stopObservingPairingState = directPairingStore.observeState {
+                val direct = directPairingStore.snapshot()
                 runOnUiThread {
-                    if (!isPaired && directPairingStore.snapshot().state == PairingState.ACTIVE) showActivePairing()
+                    if (!isPaired && direct.state == PairingState.ACTIVE) showActivePairing(direct)
+                    else refreshStoredPairingState(direct)
                 }
             }
         }
@@ -534,11 +548,7 @@ class MainActivity : ComponentActivity() {
             )
             brandReceiverRegistered = true
         }
-        if (directPairingStore.snapshot().state == PairingState.ACTIVE) {
-            cachedBranding = directBrandingStore.load()
-            pendingBrandCandidate = directBrandingStore.candidate()
-            directBrandStatus = directBrandingStore.status()
-        }
+        refreshStoredPairingState(directPairingStore.snapshot())
     }
 
     override fun onStop() {
@@ -554,13 +564,17 @@ class MainActivity : ComponentActivity() {
     private fun observeMessageSummaries() {
         val dao = EventDatabase.getInstance(this).messageQueryDao()
         lifecycleScope.launch {
-            dao.observeChannelInbox().collect { rows ->
-                channelItems = rows.map(ChannelInboxRecord::toUiItem)
-            }
-        }
-        lifecycleScope.launch {
-            dao.observeTrashInbox().collect { rows ->
-                trashChannelItems = rows.map(ChannelInboxRecord::toUiItem)
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    dao.observeChannelInbox().collect { rows ->
+                        channelItems = rows.map(ChannelInboxRecord::toUiItem)
+                    }
+                }
+                launch {
+                    dao.observeTrashInbox().collect { rows ->
+                        trashChannelItems = rows.map(ChannelInboxRecord::toUiItem)
+                    }
+                }
             }
         }
     }
@@ -568,12 +582,15 @@ class MainActivity : ComponentActivity() {
     private fun observeTrashedChannels() {
         val repository = EventRepository(EventDatabase.getInstance(this).eventDao())
         lifecycleScope.launch {
-            repository.observeTrashedChannels().collect { trashedChannels = it }
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                repository.observeTrashedChannels().collect { trashedChannels = it }
+            }
         }
     }
 
     private fun cleanupLocalTrash() {
-        lifecycleScope.launch(Dispatchers.IO) {
+        if (trashCleanupJob?.isActive == true) return
+        trashCleanupJob = lifecycleScope.launch(Dispatchers.IO) {
             val repository = EventRepository(EventDatabase.getInstance(this@MainActivity).eventDao())
             cleanupExpiredLocalTrash(this@MainActivity, repository)
         }
@@ -581,6 +598,7 @@ class MainActivity : ComponentActivity() {
 
     private fun markChannelRead(channelId: String) {
         lifecycleScope.launch(Dispatchers.IO) {
+            clearReadChannelNotifications(this@MainActivity, channelId)
             EventDatabase.getInstance(this@MainActivity).messageQueryDao().markReadToLatest(channelId)
         }
     }
@@ -649,7 +667,7 @@ class MainActivity : ComponentActivity() {
         val channel = getSystemService(NotificationManager::class.java)
             .getNotificationChannel(NotificationChannels.ALARM_CHANNEL_ID)
         readiness = buildDirectReadinessSnapshot(
-            paired = directPairingStore.snapshot().state == PairingState.ACTIVE,
+            paired = isPaired,
             notificationPermission = isNotificationPermissionGranted &&
                 NotificationManagerCompat.from(this).areNotificationsEnabled(),
             alarmChannelEnabled = channel != null && channel.importance != NotificationManager.IMPORTANCE_NONE,
@@ -660,24 +678,24 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private fun refreshStoredPairingState() {
-        val direct = directPairingStore.snapshot()
+    private fun refreshStoredPairingState(direct: DirectPairingSnapshot = directPairingStore.snapshot()) {
         isPaired = direct.state == PairingState.ACTIVE
+        activePairingId = direct.active?.pairingId.takeIf { isPaired }
         directProjectId = direct.active?.projectId
-        cachedBranding = if (isPaired) directBrandingStore.load() else null
-        pendingBrandCandidate = if (isPaired) directBrandingStore.candidate() else null
-        directBrandStatus = if (isPaired) directBrandingStore.status() else null
+        cachedBranding = if (isPaired) directBrandingStore.load(activePairingId) else null
+        pendingBrandCandidate = if (isPaired) directBrandingStore.candidate(activePairingId) else null
+        directBrandStatus = if (isPaired) directBrandingStore.status(activePairingId) else null
         if (isPaired || (localModeEnabled && !forceSetup)) window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
         else window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
     }
 
-    private fun showActivePairing() {
+    private fun showActivePairing(direct: DirectPairingSnapshot = directPairingStore.snapshot()) {
         pendingDirectInvite = null
         inviteInput = ""
         setupStep = SetupStep.WELCOME
         setupDisplayState = SetupDisplayState()
         forceSetup = false
-        refreshStoredPairingState()
+        refreshStoredPairingState(direct)
         refreshReadiness()
     }
 
@@ -715,15 +733,16 @@ class MainActivity : ComponentActivity() {
                     val brandCleared = runCatching { directBrandingStore.clearPairing() }.isSuccess
                     val clearing = directPairingStore.snapshot()
                     val autoInitDisabled = clearing.state == PairingState.UNPAIRED || runCatching {
-                        initializeDirectFirebaseRuntime(this@MainActivity, directPairingStore)
+                        initializeDirectFirebaseRuntime(this@MainActivity, directPairingStore, clearing)
                     }.getOrDefault(false)
-                    brandCleared && autoInitDisabled
+                    (brandCleared && autoInitDisabled) to clearing
                 }
             }
-            if (result.isSuccess) scheduleDirectPairing(this@MainActivity)
+            result.getOrNull()?.second?.let { scheduleDirectPairing(this@MainActivity, it.localPairingRevision) }
             if (!isActive || !pairingAttemptGuard.isCurrent(attempt)) return@launchPairingAttempt
-            result.onSuccess { cleanupImmediate ->
+            result.onSuccess { (cleanupImmediate, _) ->
                 isPaired = false
+                activePairingId = null
                 forceSetup = true
                 directProjectId = null
                 cachedBranding = null
@@ -746,29 +765,49 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun acceptBrandCandidate() {
+        val pairingId = activePairingId ?: return
         lifecycleScope.launch(Dispatchers.IO) {
-            val applied = runCatching { directBrandingStore.applyCandidate() }
+            val applied = runCatching { directBrandingStore.applyCandidate(pairingId) }
             withContext(Dispatchers.Main) {
                 applied.onSuccess {
                     if (it) {
-                        cachedBranding = directBrandingStore.load()
+                        cachedBranding = directBrandingStore.load(pairingId)
                         pendingBrandCandidate = null
-                        directBrandStatus = directBrandingStore.status()
-                        retryPendingShortcutUpdate(this@MainActivity)
+                        directBrandStatus = directBrandingStore.status(pairingId)
+                        retryPendingShortcutUpdate(this@MainActivity, pairingId)
                     }
                 }.onFailure {
-                    directBrandStatus = directBrandingStore.status()
+                    directBrandStatus = directBrandingStore.status(pairingId)
                 }
             }
         }
     }
 
     private fun rejectBrandCandidate() {
+        val pairingId = activePairingId ?: return
         lifecycleScope.launch(Dispatchers.IO) {
-            val rejected = runCatching { directBrandingStore.rejectCandidate() }.getOrDefault(false)
+            val rejected = runCatching { directBrandingStore.rejectCandidate(pairingId) }.getOrDefault(false)
             withContext(Dispatchers.Main) {
                 if (rejected) pendingBrandCandidate = null
-                directBrandStatus = directBrandingStore.status()
+                directBrandStatus = directBrandingStore.status(pairingId)
+            }
+        }
+    }
+
+    private fun restoreBuiltInAppearance() {
+        val pairingId = activePairingId ?: return
+        lifecycleScope.launch(Dispatchers.IO) {
+            val restored = runCatching { directBrandingStore.restoreBuiltIn(pairingId) }
+            withContext(Dispatchers.Main) {
+                restored.onSuccess {
+                    if (it) {
+                        cachedBranding = directBrandingStore.load(pairingId)
+                        directBrandStatus = directBrandingStore.status(pairingId)
+                        retryPendingShortcutUpdate(this@MainActivity, pairingId)
+                    }
+                }.onFailure {
+                    directBrandStatus = directBrandingStore.status(pairingId)
+                }
             }
         }
     }

@@ -67,7 +67,7 @@ denden channel use --channel-id ID
 denden channel remove --channel-id ID
 ```
 
-`init` 會在目前目錄建立 `.denden.json`，檔案已存在時拒絕。CLI 不允許移除目前的預設訊息頻道。
+`init` 會在目前目錄建立 `.denden.json`；省略 `--name` 時，以目前目錄的資料夾名稱作為訊息頻道名稱；檔案已存在時拒絕。CLI 不允許移除目前的預設訊息頻道。
 
 ## 通知預設值
 

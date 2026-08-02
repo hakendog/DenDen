@@ -1,6 +1,6 @@
 {
   "name": "@tensal/denden",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "description": "Agent-first Android pager with bring-your-own Firebase",
   "type": "module",

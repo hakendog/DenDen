@@ -1,6 +1,8 @@
 package com.tensal.denden.branding
 
 import android.content.Context
+import android.content.ContextWrapper
+import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.Color
 import androidx.test.core.app.ApplicationProvider
@@ -11,6 +13,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -22,14 +25,20 @@ import java.util.Base64
 
 @RunWith(AndroidJUnit4::class)
 class DirectBrandStoreTest {
-    private val context = ApplicationProvider.getApplicationContext<Context>()
+    private val targetContext = ApplicationProvider.getApplicationContext<Context>()
+    private val context = object : ContextWrapper(targetContext) {
+        override fun getApplicationContext(): Context = this
+        override fun getFilesDir(): File = File(targetContext.filesDir, "direct-branding-test")
+        override fun getSharedPreferences(name: String, mode: Int): SharedPreferences =
+            targetContext.getSharedPreferences("test-$name", mode)
+    }
     private val now = 1_800_000_000_000L
 
     @Before
     @After
     fun clearStore() {
-        File(context.filesDir, "direct-branding").deleteRecursively()
-        context.getSharedPreferences("direct_branding", Context.MODE_PRIVATE).edit().clear().commit()
+        context.filesDir.deleteRecursively()
+        targetContext.deleteSharedPreferences("test-direct_branding")
     }
 
     @Test
@@ -45,9 +54,12 @@ class DirectBrandStoreTest {
         assertTrue(store.accept(PAIRING_ID, "brand-manifest", manifest(transferId, bytes, chunks.size), now))
         assertNull(store.load(PAIRING_ID))
         assertEquals(1L, DirectBrandStore(context).candidate(PAIRING_ID)?.generation)
+        assertSame(store.candidate(PAIRING_ID), store.candidate(PAIRING_ID))
         assertTrue(store.applyCandidate(PAIRING_ID))
         val branding = store.load(PAIRING_ID)
         assertNotNull(branding)
+        assertSame(branding, store.load(PAIRING_ID))
+        assertNotNull(store.loadShortcut(PAIRING_ID))
         assertEquals(Color.parseColor("#123456"), branding?.brandColor)
         assertNull(branding?.backgroundColor)
         assertEquals(Color.parseColor("#123456"), store.activeBrandColor(PAIRING_ID))
@@ -70,6 +82,22 @@ class DirectBrandStoreTest {
         assertTrue(store.applyCandidate(PAIRING_ID))
         assertNull(store.load(PAIRING_ID))
         assertNull(store.activeStatusMask(PAIRING_ID))
+    }
+
+    @Test
+    fun localRestoreUsesBuiltInAppearanceWithoutLoweringGeneration() {
+        val store = DirectBrandStore(context)
+        acceptTransfer(store, "local-restore-0000001", transparentPng(), generation = 1)
+        assertTrue(store.applyCandidate(PAIRING_ID))
+        assertTrue(store.markShortcutUpdated(requireNotNull(store.pendingShortcutUpdate(PAIRING_ID))))
+
+        assertTrue(store.restoreBuiltIn(PAIRING_ID))
+        assertNull(store.load(PAIRING_ID))
+        assertNull(store.activeStatusMask(PAIRING_ID))
+        assertFalse(store.status(PAIRING_ID).isCustom)
+        assertEquals(1L, store.status(PAIRING_ID).generation)
+        assertTrue(store.shortcutUpdatePending(PAIRING_ID))
+        assertFalse(store.restoreBuiltIn(PAIRING_ID))
     }
 
     @Test

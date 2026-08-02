@@ -76,7 +76,7 @@ Samsung Bixby can create a quiet message, standard notification, or alarm. Taske
 ## Important limits
 
 - Remote notification content is encrypted on your computer, then sent to your phone through your own Firebase project.
-- A phone that is offline cannot receive remote messages. Messages sent while it is offline are not saved for later delivery, so they will not arrive when the phone reconnects.
+- A phone that is offline cannot receive remote messages immediately. FCM may retain the encrypted message only for its validity window: up to five minutes for ordinary messages and one minute for ring and stop; expired messages are not delivered, and delivery is still not guaranteed.
 - Received messages stay on the current phone and do not sync across phones.
 - A DenDen pairing code contains pairing secrets. Do not capture, forward, or upload it.
 - Network conditions, Android notification permissions, Do Not Disturb, and battery settings can delay or block notifications.

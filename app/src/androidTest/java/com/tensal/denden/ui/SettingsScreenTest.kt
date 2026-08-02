@@ -68,7 +68,8 @@ class SettingsScreenTest {
     }
 
     @Test
-    fun systemSettingsShowsBoundedBrandProgressAndShortcutRetry() {
+    fun systemSettingsHidesBrandGenerationAndCanRestoreBuiltInAppearance() {
+        var restoreRequested = false
         composeRule.setContent {
             LocalizedTestTheme {
                 SystemSettingsScreen(
@@ -80,15 +81,20 @@ class SettingsScreenTest {
                         receivingTransferFingerprint = "transfer1234",
                         receivedChunks = 3,
                         totalChunks = 8,
-                        shortcutUpdatePending = true
-                    )
+                        shortcutUpdatePending = true,
+                        candidateGeneration = 8
+                    ),
+                    onRestoreBuiltInAppearance = { restoreRequested = true }
                 )
             }
         }
         composeRule.onNodeWithText("自訂 DenDen 已啟用").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("DenDen 外觀版本：7").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("DenDen 外觀版本：7").assertDoesNotExist()
+        composeRule.onNodeWithText("待確認的外觀版本：8").assertDoesNotExist()
         composeRule.onNodeWithText("接收中：3/8 片 · transfer1234").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("捷徑圖示等待前景重試").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("切換回內建 DenDen").performScrollTo().performClick()
+        composeRule.runOnIdle { assertTrue(restoreRequested) }
         composeRule.onNodeWithText("abcdef123456").assertDoesNotExist()
     }
 

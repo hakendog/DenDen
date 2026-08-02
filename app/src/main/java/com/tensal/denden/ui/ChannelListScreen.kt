@@ -54,16 +54,19 @@ fun ChannelListScreen(
 ) {
     var query by remember { mutableStateOf("") }
     val normalized = query.trim().lowercase()
-    val allActiveChannels = (channelItems ?: events.filterChannelInboxItems("", lastReadAtByChannel, trashedChannelIds))
-        .filterNot { it.channelId in trashedChannelIds }
-        .filterNot {
-            if (channelItems != null) it.archived else it.channelId in archivedChannelIds
-        }
-    val channels = allActiveChannels
-        .filter {
+    val allActiveChannels = remember(channelItems, events, lastReadAtByChannel, archivedChannelIds, trashedChannelIds) {
+        (channelItems ?: events.filterChannelInboxItems("", lastReadAtByChannel, trashedChannelIds))
+            .filterNot { it.channelId in trashedChannelIds }
+            .filterNot {
+                if (channelItems != null) it.archived else it.channelId in archivedChannelIds
+            }
+    }
+    val channels = remember(allActiveChannels, normalized) {
+        allActiveChannels.filter {
             normalized.isBlank() || it.channelId.lowercase().contains(normalized) ||
                 it.displayName.lowercase().contains(normalized)
         }
+    }
 
     Column(
         modifier = Modifier
@@ -130,9 +133,11 @@ fun ArchivedChannelsScreen(
     onChannelSelected: (String) -> Unit,
     onChannelUnarchived: (String) -> Unit
 ) {
-    val archivedChannels = (channelItems ?: events.filterChannelInboxItems("", lastReadAtByChannel, trashedChannelIds))
-        .filterNot { it.channelId in trashedChannelIds }
-        .filter { if (channelItems != null) it.archived else it.channelId in archivedChannelIds }
+    val archivedChannels = remember(channelItems, events, lastReadAtByChannel, archivedChannelIds, trashedChannelIds) {
+        (channelItems ?: events.filterChannelInboxItems("", lastReadAtByChannel, trashedChannelIds))
+            .filterNot { it.channelId in trashedChannelIds }
+            .filter { if (channelItems != null) it.archived else it.channelId in archivedChannelIds }
+    }
 
     Column(
         modifier = Modifier

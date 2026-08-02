@@ -51,4 +51,4 @@ Do not uninstall the old version or clear DenDen app data first. If Android reje
 - Enter passwords, Google verification codes, and other sign-in information only in your own browser or private computer prompt.
 - Any operation that changes a project, pairing, image, or computer permission should show a clear summary first.
 - Confirm setup, repairs, and new devices with a test notification.
-- DenDen does not save notifications for an offline phone. Messages sent while the phone is offline will not arrive after it reconnects.
+- FCM may temporarily retain encrypted ordinary messages for up to five minutes and ring or stop commands for up to one minute. Expired messages are not recovered, and delivery is never guaranteed.

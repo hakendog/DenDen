@@ -22,6 +22,7 @@ import com.tensal.denden.branding.applyDenDenBranding
 import com.tensal.denden.data.EventDatabase
 import com.tensal.denden.data.EventRepository
 import com.tensal.denden.data.DenDenEvent
+import com.tensal.denden.messaging.notificationGroupKey
 import com.tensal.denden.notification.NotificationChannels
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CancellationException
@@ -155,7 +156,7 @@ class AlarmService : Service() {
         val preClaimNotificationId = preClaimAlarmNotificationId(eventId)
         startForeground(
             preClaimNotificationId,
-            createPreClaimAlarmNotification(this, eventId, title)
+            createPreClaimAlarmNotification(this, eventId, title, channelId)
         )
         pendingStartJob = serviceScope.launch(start = CoroutineStart.UNDISPATCHED) {
             val activated = try {
@@ -175,7 +176,7 @@ class AlarmService : Service() {
                     activate = {
                         startForeground(
                             alarmNotificationId(eventId),
-                            createNotification(title, message, eventId, openIntent)
+                            createNotification(title, message, eventId, channelId, openIntent)
                         )
                         NotificationManagerCompat.from(this@AlarmService).cancel(preClaimNotificationId)
                         AlarmRuntime.markActive(eventId)
@@ -264,6 +265,7 @@ class AlarmService : Service() {
         title: String,
         message: String,
         eventId: String,
+        channelId: String,
         openIntent: Intent
     ): Notification {
         val stopIntent = Intent(this, AlarmService::class.java).apply {
@@ -290,6 +292,7 @@ class AlarmService : Service() {
             .setOngoing(true)
             .setContentIntent(openPendingIntent)
             .setFullScreenIntent(openPendingIntent, true)
+            .setGroup(notificationGroupKey(channelId))
             .addAction(android.R.drawable.ic_media_pause, getString(R.string.stop_alarm), stopPendingIntent)
             .build()
     }
@@ -348,7 +351,8 @@ internal fun isRingExpired(ringUntilMillis: Long?, now: Long): Boolean =
 internal fun createPreClaimAlarmNotification(
     context: Context,
     eventId: String,
-    title: String
+    title: String,
+    channelId: String
 ): Notification {
     val projectsIntent = Intent(context, MainActivity::class.java).apply {
         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -367,6 +371,7 @@ internal fun createPreClaimAlarmNotification(
         .setCategory(NotificationCompat.CATEGORY_SERVICE)
         .setOngoing(true)
         .setContentIntent(contentIntent)
+        .setGroup(notificationGroupKey(channelId))
         .build()
 }
 

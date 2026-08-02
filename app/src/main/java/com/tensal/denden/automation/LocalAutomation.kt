@@ -177,7 +177,7 @@ private fun enqueueLocalAutomationSideEffect(context: Context, eventId: String) 
 fun reconcileLocalAutomation(context: Context) {
     WorkManager.getInstance(context).enqueueUniqueWork(
         LOCAL_RECONCILIATION_WORK,
-        ExistingWorkPolicy.REPLACE,
+        ExistingWorkPolicy.KEEP,
         OneTimeWorkRequestBuilder<LocalAutomationReconciliationWorker>().build()
     )
 }

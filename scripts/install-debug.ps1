@@ -5,7 +5,7 @@ $apk = Join-Path $root "app\build\outputs\apk\debug\app-debug.apk"
 $package = "com.tensal.denden"
 
 function Start-DenDen {
-    & adb -d shell am start --user 0 -n "$package/.MainActivity" | Out-Null
+    & adb -d shell am start --user 0 -n "$package/.LauncherActivity" | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "App installed but could not be launched." }
 }
 

@@ -28,12 +28,35 @@ test("direct FCM event is encrypted, bounded, and uses topic data message policy
   });
   assert.equal(built.request.message.topic, config.topic);
   assert.equal(Object.hasOwn(built.request.message, "token"), false);
-  assert.deepEqual(built.request.message.android, { priority: "HIGH", ttl: "0s" });
+  assert.deepEqual(built.request.message.android, { priority: "HIGH", ttl: "60s" });
   assert.ok(built.dataBytes <= 2048);
   const plaintext = decryptDirectFcmPayload(built.request.message.data, config.eventKey);
   assert.equal(plaintext.mode, "ring");
   assert.equal(plaintext.ringUntilMillis, 1_800_000_030_000);
   assert.equal(plaintext.expiresAtMillis, 1_800_000_060_000);
+});
+
+test("daily FCM lifetimes match their authenticated expiry windows", () => {
+  const nowMillis = 1_800_000_000_000;
+  const cases = [
+    ["quiet", { channelId: "main" }, "NORMAL", "300s", 300_000],
+    ["notify", { channelId: "main" }, "NORMAL", "300s", 300_000],
+    ["ring", { channelId: "main" }, "HIGH", "60s", 60_000],
+    ["stop", { targetEventId: "event-0001" }, "HIGH", "60s", 60_000],
+  ];
+  for (const [action, payload, priority, ttl, lifetimeMillis] of cases) {
+    const built = buildDirectFcmMessage({
+      action,
+      payload,
+      config,
+      nowMillis,
+      messageId: `message-daily-${action}-0001`,
+      nonce: "gIGCg4SFhoeIiYqL",
+    });
+    assert.deepEqual(built.request.message.android, { priority, ttl });
+    const plaintext = decryptDirectFcmPayload(built.request.message.data, config.eventKey);
+    assert.equal(plaintext.expiresAtMillis - plaintext.issuedAtMillis, lifetimeMillis);
+  }
 });
 
 test("FCM accepted means accepted only, and credential never appears in result", async () => {

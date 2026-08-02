@@ -80,8 +80,7 @@
     <string name="denden_appearance">DenDen 外觀</string>
     <string name="custom_denden_active">自訂 DenDen 已啟用</string>
     <string name="builtin_denden_active">使用內建 DenDen</string>
-    <string name="denden_generation">DenDen 外觀版本：%1$d</string>
-    <string name="candidate_generation">待確認的外觀版本：%1$d</string>
+    <string name="use_builtin_denden">切換回內建 DenDen</string>
     <plurals name="brand_receiving">
         <item quantity="other">接收中：%1$d/%2$d 片 · %3$s</item>
     </plurals>
@@ -170,6 +169,7 @@
     <string name="restore_channel">復原頻道</string>
     <string name="delete_permanently_from_device">從此裝置永久刪除</string>
     <string name="load_older_messages">載入更舊訊息</string>
+    <string name="loading_events">正在載入事件</string>
     <string name="delete_permanently_title">從此裝置永久刪除？</string>
     <string name="delete_permanently_message">此動作不可復原，會刪除此裝置的頻道事件、已讀與封存狀態；其他裝置的本機歷史不受影響。</string>
     <string name="delete_permanently">永久刪除</string>

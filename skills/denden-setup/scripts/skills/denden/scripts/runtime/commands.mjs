@@ -1,4 +1,4 @@
-import { resolve } from "node:path";
+import { basename, resolve } from "node:path";
 import { addChannel, createRepoConfig, findRepoConfig, readJson, redact, removeChannel, selectChannel, setDefaultChannel, userConfigPath, validateRepoConfig, writeRepoJson } from "./config.mjs";
 import { sendDirectFcmMessage } from "./fcm-client.mjs";
 import { inspectPolicy, PRESETS } from "./policy.mjs";
@@ -136,7 +136,7 @@ export async function runChannelCommand(argv, { cwd = process.cwd() } = {}) {
     const path = resolve(cwd, ".denden.json");
     const existing = await readJson(path, { required: false });
     if (existing) throw new Error(".denden.json 已存在");
-    const value = createRepoConfig(options["channel-id"], options.name || "main");
+    const value = createRepoConfig(options["channel-id"], options.name ?? basename(resolve(cwd)));
     await writeRepoJson(path, value);
     return { path, ...value };
   }
