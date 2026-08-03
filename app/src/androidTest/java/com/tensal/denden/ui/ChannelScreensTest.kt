@@ -7,6 +7,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.hasStateDescription
 import com.tensal.denden.DenDenThemeMode
 import com.tensal.denden.MainScreen
@@ -159,6 +160,10 @@ class ChannelScreensTest {
         composeRule.onNodeWithText("外觀").assertIsDisplayed()
         composeRule.onNodeWithText("訊息頻道").assertDoesNotExist()
 
+        composeRule.mainClock.autoAdvance = true
+        composeRule.onNodeWithText("系統設定").performScrollTo()
+        composeRule.waitForIdle()
+        composeRule.mainClock.autoAdvance = false
         composeRule.onNodeWithText("系統設定").performClick()
         composeRule.mainClock.advanceTimeByFrame()
         composeRule.waitForIdle()

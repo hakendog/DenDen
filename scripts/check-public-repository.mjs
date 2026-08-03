@@ -24,6 +24,7 @@ const exactPaths = new Set([
   "gradlew.bat",
   "package-lock.json",
   "package.json",
+  "scripts/ci-scope.mjs",
   "scripts/check-docs.mjs",
   "scripts/check-debug-apk.mjs",
   "scripts/check-public-repository.mjs",
@@ -93,6 +94,13 @@ export function isAllowedPublicPath(value) {
   return exactPaths.has(path) || allowedPrefixes.some((prefix) => path.startsWith(prefix));
 }
 
+export function findUnreviewedPublicPaths(paths, candidates) {
+  const manifest = new Set(paths);
+  return [...new Set(candidates)]
+    .filter((path) => isAllowedPublicPath(path) && !manifest.has(path))
+    .sort();
+}
+
 function git(args, cwd, options = {}) {
   return execFileSync("git", args, { cwd, encoding: "utf8", ...options });
 }
@@ -152,7 +160,7 @@ export function inspectPublicRepository(expectedCommits = null, cwd = process.cw
     .trim().split(/\r?\n/).filter(Boolean);
   for (const ref of refs) {
     if (/(^|\/)dev$/.test(ref)) failures.push(`${ref}: 公開 repository 禁止 dev 分支`);
-    if (ref.startsWith("refs/tags/") && !new Set(["refs/tags/v1.0.0", "refs/tags/v1.0.1", "refs/tags/v1.0.2"]).has(ref)) {
+    if (ref.startsWith("refs/tags/") && !new Set(["refs/tags/v1.0.0", "refs/tags/v1.0.1", "refs/tags/v1.0.2", "refs/tags/v1.0.3"]).has(ref)) {
       failures.push(`${ref}: 非預期公開 tag`);
     }
   }

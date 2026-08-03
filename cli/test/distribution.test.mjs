@@ -14,7 +14,6 @@ import {
 
 const root = process.cwd();
 const execFileAsync = promisify(execFile);
-const installGuideUrl = "https://raw.githubusercontent.com/hakendog/DenDen/881d5764ec80d3a75477e9e6ac083d9473691063/docs/agent-install.md";
 
 test("CLI exposes the direct FCM runtime contract without an Automation credential", async () => {
   const { stdout } = await execFileAsync(process.execPath, [join(root, "cli/bin/denden.mjs"), "capabilities"], { cwd: root });
@@ -130,7 +129,7 @@ test("public license, identity, version, and security metadata stay aligned", as
   const pkg = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
   const lock = JSON.parse(await readFile(join(root, "package-lock.json"), "utf8"));
   assert.deepEqual({ version: pkg.version, license: pkg.license, private: pkg.private }, {
-    version: "1.0.2",
+    version: "1.0.3",
     license: "Apache-2.0",
     private: true,
   });
@@ -146,8 +145,8 @@ test("public license, identity, version, and security metadata stay aligned", as
   assert.match(android, /namespace = "com\.tensal\.denden"/);
   assert.match(android, /applicationId = "com\.tensal\.denden"/);
   assert.doesNotMatch(android, /com\.joaomgcd:taskerpluginlibrary/);
-  assert.match(android, /versionCode = 3/);
-  assert.match(android, /versionName = "1\.0\.2"/);
+  assert.match(android, /versionCode = 4/);
+  assert.match(android, /versionName = "1\.0\.3"/);
 
   const workflow = await readFile(join(root, ".github/workflows/ci.yml"), "utf8");
   assert.match(workflow, /api-level: \[26, 35\]/);
@@ -197,6 +196,8 @@ test("daily skill cannot gain backend or repository ring authority", async () =>
 test("public docs and install bootstrap stay official, pinned, and registry-independent", async () => {
   const readmeEn = await readFile(join(root, "README.md"), "utf8");
   const readmeZh = await readFile(join(root, "README.zh-TW.md"), "utf8");
+  const installGuideUrl = readmeZh.match(/https:\/\/raw\.githubusercontent\.com\/hakendog\/DenDen\/[0-9a-f]{40}\/docs\/agent-install\.md/)?.[0];
+  assert.ok(installGuideUrl, "繁中 README 必須包含固定完整 commit SHA 的安裝入口");
   const setupGuideEn = await readFile(join(root, "docs/en/setup.md"), "utf8");
   const setupGuideZh = await readFile(join(root, "docs/zh-TW/setup.md"), "utf8");
   const deviceGuideEn = await readFile(join(root, "docs/en/device-management.md"), "utf8");
@@ -383,6 +384,10 @@ test("CI runs local gates and repository safety checks reject release secrets", 
   const ignore = await readFile(join(root, ".gitignore"), "utf8");
   assert.match(workflow, /pull_request:/);
   assert.match(workflow, /branches: \[main\]/);
+  assert.match(workflow, /workflow_dispatch:/);
+  assert.match(workflow, /cancel-in-progress: true/);
+  assert.match(workflow, /node scripts\/ci-scope\.mjs/);
+  assert.match(workflow, /needs\.scope\.outputs\.full == 'true'/);
   assert.match(workflow, /fetch-depth: 0/);
   assert.doesNotMatch(workflow, /branches:.*\bdev\b/);
   assert.match(workflow, /npm test/);

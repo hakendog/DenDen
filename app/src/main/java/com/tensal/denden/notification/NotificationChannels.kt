@@ -3,8 +3,34 @@ package com.tensal.denden.notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import com.tensal.denden.APP_SETTINGS_PREFS
 import com.tensal.denden.R
 import com.tensal.denden.withSelectedAppLanguage
+
+private const val NOTIFICATION_DISPLAY_MODE_KEY = "notification_display_mode"
+
+enum class NotificationDisplayMode(val storageValue: String) {
+    FULL("full"),
+    STANDARD("standard"),
+    COMPACT("compact");
+
+    companion object {
+        fun fromStorage(value: String?): NotificationDisplayMode =
+            entries.firstOrNull { it.storageValue == value } ?: STANDARD
+    }
+}
+
+fun readNotificationDisplayMode(context: Context): NotificationDisplayMode = NotificationDisplayMode.fromStorage(
+    context.getSharedPreferences(APP_SETTINGS_PREFS, Context.MODE_PRIVATE)
+        .getString(NOTIFICATION_DISPLAY_MODE_KEY, null)
+)
+
+fun writeNotificationDisplayMode(context: Context, mode: NotificationDisplayMode) {
+    context.getSharedPreferences(APP_SETTINGS_PREFS, Context.MODE_PRIVATE)
+        .edit()
+        .putString(NOTIFICATION_DISPLAY_MODE_KEY, mode.storageValue)
+        .apply()
+}
 
 object NotificationChannels {
     const val ALARM_CHANNEL_ID = "denden_alarm_v2"
