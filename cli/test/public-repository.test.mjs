@@ -5,11 +5,11 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
 import {
+  findUnreviewedPublicPaths,
   inspectPublicRepository,
   isAllowedPublicPath,
   isForbiddenPublicPath,
 } from "../../scripts/check-public-repository.mjs";
-import { findUnreviewedPublicPaths } from "../../scripts/prepare-public-candidate.mjs";
 
 test("public path allowlist accepts product files and rejects private material", () => {
   for (const path of [

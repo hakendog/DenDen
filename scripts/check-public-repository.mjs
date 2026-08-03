@@ -94,6 +94,13 @@ export function isAllowedPublicPath(value) {
   return exactPaths.has(path) || allowedPrefixes.some((prefix) => path.startsWith(prefix));
 }
 
+export function findUnreviewedPublicPaths(paths, candidates) {
+  const manifest = new Set(paths);
+  return [...new Set(candidates)]
+    .filter((path) => isAllowedPublicPath(path) && !manifest.has(path))
+    .sort();
+}
+
 function git(args, cwd, options = {}) {
   return execFileSync("git", args, { cwd, encoding: "utf8", ...options });
 }
