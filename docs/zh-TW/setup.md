@@ -30,7 +30,7 @@ DenDen 支援 Android 8.0 以上版本：
 ```text
 請根據以下 DenDen 安裝引導，協助我完成安裝與設定：
 
-https://raw.githubusercontent.com/hakendog/DenDen/881d5764ec80d3a75477e9e6ac083d9473691063/docs/agent-install.md
+https://raw.githubusercontent.com/hakendog/DenDen/9a4a84871737dfeeefdcb19913a2745fc712d7b4/docs/agent-install.md
 ```
 
 AI 助理讀取安裝引導後，會載入 DenDen 設定助手並開始檢查。
