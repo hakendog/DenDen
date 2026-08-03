@@ -43,6 +43,9 @@ import com.tensal.denden.alarm.writeAlarmOutputMode
 import com.tensal.denden.alarm.writeAlarmRingtoneUri
 import com.tensal.denden.alarm.writeAlarmVibrationPattern
 import com.tensal.denden.branding.DirectBrandStatus
+import com.tensal.denden.notification.NotificationDisplayMode
+import com.tensal.denden.notification.readNotificationDisplayMode
+import com.tensal.denden.notification.writeNotificationDisplayMode
 import com.tensal.denden.readiness.ReadinessSnapshot
 import java.text.DateFormat
 import java.util.Date
@@ -56,6 +59,7 @@ fun SettingsScreen(
     testMessage: String? = null,
     onThemeModeChange: (DenDenThemeMode) -> Unit = {},
     onAppLanguageChange: (AppLanguage) -> Unit = {},
+    onOpenNotificationDisplaySettings: () -> Unit = {},
     onOpenAlarmOutputSettings: () -> Unit = {},
     onOpenDeviceManagement: () -> Unit = {},
     onOpenSystemPermissions: () -> Unit = {},
@@ -88,6 +92,14 @@ fun SettingsScreen(
                 stringResource(R.string.language),
                 stringResource(appLanguage.labelRes),
                 onClick = { showLanguageDialog = true }
+            )
+        }
+        SectionLabel(stringResource(R.string.notification_permission))
+        SurfaceCard(contentPadding = PaddingValues(0.dp)) {
+            NavigationRow(
+                stringResource(R.string.notification_display),
+                notificationDisplayModeLabel(readNotificationDisplayMode(context)),
+                onOpenNotificationDisplaySettings
             )
         }
         SectionLabel(stringResource(R.string.alarm))
@@ -150,6 +162,30 @@ fun SettingsScreen(
                 }
             }
         )
+    }
+}
+
+@Composable
+fun NotificationDisplaySettingsScreen(onBack: () -> Unit = {}) {
+    val context = LocalContext.current
+    var mode by remember { mutableStateOf(readNotificationDisplayMode(context)) }
+    SettingsSubpage(
+        stringResource(R.string.notification_display),
+        stringResource(R.string.notification_display_description),
+        onBack
+    ) {
+        SurfaceCard(contentPadding = PaddingValues(vertical = 4.dp)) {
+            NotificationDisplayMode.entries.forEach { option ->
+                NotificationDisplayModeRow(
+                    mode = option,
+                    selected = mode == option,
+                    onClick = {
+                        mode = option
+                        writeNotificationDisplayMode(context, option)
+                    }
+                )
+            }
+        }
     }
 }
 
@@ -249,6 +285,28 @@ fun AlarmOutputSettingsScreen(onBack: () -> Unit = {}) {
                 }
             }
         )
+    }
+}
+
+@Composable
+private fun NotificationDisplayModeRow(
+    mode: NotificationDisplayMode,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(selected = selected, onClick = onClick)
+        Column(Modifier.padding(start = 8.dp)) {
+            Text(notificationDisplayModeLabel(mode), fontWeight = FontWeight.Medium)
+            Text(
+                notificationDisplayModeDescription(mode),
+                color = DenDenColors.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
     }
 }
 
@@ -553,6 +611,24 @@ private fun themeModeLabel(mode: DenDenThemeMode): String = stringResource(
         DenDenThemeMode.SYSTEM -> R.string.theme_system
         DenDenThemeMode.LIGHT -> R.string.theme_light
         DenDenThemeMode.DARK -> R.string.theme_dark
+    }
+)
+
+@Composable
+private fun notificationDisplayModeLabel(mode: NotificationDisplayMode): String = stringResource(
+    when (mode) {
+        NotificationDisplayMode.FULL -> R.string.notification_display_full
+        NotificationDisplayMode.STANDARD -> R.string.notification_display_standard
+        NotificationDisplayMode.COMPACT -> R.string.notification_display_compact
+    }
+)
+
+@Composable
+private fun notificationDisplayModeDescription(mode: NotificationDisplayMode): String = stringResource(
+    when (mode) {
+        NotificationDisplayMode.FULL -> R.string.notification_display_full_description
+        NotificationDisplayMode.STANDARD -> R.string.notification_display_standard_description
+        NotificationDisplayMode.COMPACT -> R.string.notification_display_compact_description
     }
 )
 

@@ -94,6 +94,7 @@ import com.tensal.denden.protocol.parseDirectFcmInvite
 import com.tensal.denden.ui.ActiveAlarmPayload
 import com.tensal.denden.ui.AlarmScreen
 import com.tensal.denden.ui.AlarmOutputSettingsScreen
+import com.tensal.denden.ui.NotificationDisplaySettingsScreen
 import com.tensal.denden.ui.ArchivedChannelsScreen
 import com.tensal.denden.ui.ChannelListScreen
 import com.tensal.denden.ui.ChannelInboxItem
@@ -119,7 +120,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.util.UUID
 
-private enum class SettingsPage { HOME, ALARM_OUTPUT, PERMISSIONS, SYSTEM }
+private enum class SettingsPage { HOME, NOTIFICATION_DISPLAY, ALARM_OUTPUT, PERMISSIONS, SYSTEM }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -310,6 +311,9 @@ fun MainScreen(
         ) {
             when (selectedTab) {
                 Tab.SETTINGS -> when (settingsPage) {
+                    SettingsPage.NOTIFICATION_DISPLAY -> NotificationDisplaySettingsScreen(
+                        onBack = { settingsPage = SettingsPage.HOME }
+                    )
                     SettingsPage.ALARM_OUTPUT -> AlarmOutputSettingsScreen(
                         onBack = { settingsPage = SettingsPage.HOME }
                     )
@@ -343,6 +347,7 @@ fun MainScreen(
                         testMessage = testMessage,
                         onThemeModeChange = onThemeModeChange,
                         onAppLanguageChange = onAppLanguageChange,
+                        onOpenNotificationDisplaySettings = { settingsPage = SettingsPage.NOTIFICATION_DISPLAY },
                         onOpenAlarmOutputSettings = { settingsPage = SettingsPage.ALARM_OUTPUT },
                         onOpenDeviceManagement = {},
                         onOpenSystemPermissions = { settingsPage = SettingsPage.PERMISSIONS },

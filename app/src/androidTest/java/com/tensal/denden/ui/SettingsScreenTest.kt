@@ -101,15 +101,19 @@ class SettingsScreenTest {
     @Test
     fun homeContainsNoServerDeviceManagement() {
         var alarmOutputOpened = false
+        var notificationDisplayOpened = false
         composeRule.setContent {
             LocalizedTestTheme {
                 SettingsScreen(
                     DenDenThemeMode.SYSTEM,
                     buildDirectReadinessSnapshot(true, true, true, 0, 0, null, null),
-                    onOpenAlarmOutputSettings = { alarmOutputOpened = true }
+                    onOpenAlarmOutputSettings = { alarmOutputOpened = true },
+                    onOpenNotificationDisplaySettings = { notificationDisplayOpened = true }
                 )
             }
         }
+        composeRule.onNodeWithText("通知欄顯示").performScrollTo().performClick()
+        composeRule.runOnIdle { assertTrue(notificationDisplayOpened) }
         composeRule.onNodeWithText("警報輸出").performScrollTo().performClick()
         composeRule.runOnIdle { assertTrue(alarmOutputOpened) }
         composeRule.onNodeWithText("系統權限").performScrollTo().assertIsDisplayed()
@@ -146,6 +150,17 @@ class SettingsScreenTest {
         composeRule.onNodeWithText("響鈴並震動").assertIsDisplayed()
         composeRule.onNodeWithText("響鈴聲音").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("震動方式").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun notificationDisplaySettingsOfferThreeRetentionLevels() {
+        composeRule.setContent {
+            LocalizedTestTheme { NotificationDisplaySettingsScreen() }
+        }
+        composeRule.onNodeWithText("完整").assertIsDisplayed()
+        composeRule.onNodeWithText("標準").assertIsDisplayed()
+        composeRule.onNodeWithText("精簡").assertIsDisplayed()
+        composeRule.onNodeWithText("所有訊息頻道合併為一組，每個頻道只保留最新一則").assertIsDisplayed()
     }
 
     @Test

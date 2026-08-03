@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Bundle
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.work.CoroutineWorker
@@ -17,6 +18,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.tensal.denden.MainActivity
+import com.tensal.denden.R
 import com.tensal.denden.alarm.AlarmService
 import com.tensal.denden.alarm.AlarmRuntime
 import com.tensal.denden.alarm.isActiveFor
@@ -30,6 +32,7 @@ import com.tensal.denden.data.DirectStopCommit
 import com.tensal.denden.data.EventDatabase
 import com.tensal.denden.data.StopTombstone
 import com.tensal.denden.notification.NotificationChannels
+import com.tensal.denden.notification.readNotificationDisplayMode
 import com.tensal.denden.setup.DirectPairingStore
 import com.tensal.denden.setup.PairingState
 import com.tensal.denden.setup.directRuntimeMutex
@@ -289,12 +292,20 @@ internal suspend fun dispatchDirectEvent(
 private fun showDirectNotification(context: Context, event: DenDenEvent): Boolean {
     if (!directNotificationAvailable(context, event)) return false
     val contentIntent = directNotificationContentIntent(context, event)
-    val notification = createDirectNotification(context, event, contentIntent)
-    val summary = createDirectNotificationGroupSummary(context, event, contentIntent)
+    val plan = notificationDisplayPlan(event, readNotificationDisplayMode(context))
+    val notification = createDirectNotification(context, event, contentIntent, plan.groupKey)
+    val summary = plan.summaryId?.let {
+        createDirectNotificationGroupSummary(context, event, contentIntent, requireNotNull(plan.groupKey))
+    }
     return try {
+        when (plan.replacementScope) {
+            NotificationReplacementScope.NONE -> Unit
+            NotificationReplacementScope.CHANNEL -> clearReplaceableNotifications(context, event.channelId)
+            NotificationReplacementScope.ALL -> clearReplaceableNotifications(context)
+        }
         NotificationManagerCompat.from(context).apply {
-            notify(event.eventId.hashCode(), notification)
-            notify(notificationGroupSummaryId(event.channelId), summary)
+            notify(plan.notificationId, notification)
+            plan.summaryId?.let { notify(it, requireNotNull(summary)) }
         }
         true
     } catch (_: SecurityException) {
@@ -316,16 +327,22 @@ private fun directNotificationContentIntent(context: Context, event: DenDenEvent
 internal fun createDirectNotification(
     context: Context,
     event: DenDenEvent,
-    contentIntent: PendingIntent = directNotificationContentIntent(context, event)
+    contentIntent: PendingIntent = directNotificationContentIntent(context, event),
+    groupKey: String? = notificationGroupKey(event.channelId)
 ): Notification = NotificationCompat.Builder(context, notificationChannelId(event))
     .applyDenDenBranding(context)
     .setContentTitle(event.title ?: "DenDen")
     .setContentText(event.computedSummary)
     .setSubText(event.channelDisplayName)
+    .addExtras(Bundle().apply { putString(NOTIFICATION_CHANNEL_ID_EXTRA, event.channelId) })
     .setContentIntent(contentIntent)
     .setAutoCancel(true)
-    .setGroup(notificationGroupKey(event.channelId))
-    .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
+    .apply {
+        groupKey?.let {
+            setGroup(it)
+            setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
+        }
+    }
     .setSilent(event.notificationMode == "quiet")
     .setPriority(if (event.action == "ring") NotificationCompat.PRIORITY_HIGH else NotificationCompat.PRIORITY_DEFAULT)
     .build()
@@ -333,14 +350,18 @@ internal fun createDirectNotification(
 internal fun createDirectNotificationGroupSummary(
     context: Context,
     event: DenDenEvent,
-    contentIntent: PendingIntent = directNotificationContentIntent(context, event)
+    contentIntent: PendingIntent = directNotificationContentIntent(context, event),
+    groupKey: String = notificationGroupKey(event.channelId)
 ): Notification = NotificationCompat.Builder(context, notificationChannelId(event))
     .applyDenDenBranding(context)
-    .setContentTitle(notificationGroupName(event))
+    .setContentTitle(
+        if (groupKey == STANDARD_NOTIFICATION_GROUP_KEY) context.getString(R.string.app_name)
+        else notificationGroupName(event)
+    )
     .setContentText(event.computedSummary)
     .setContentIntent(contentIntent)
     .setAutoCancel(true)
-    .setGroup(notificationGroupKey(event.channelId))
+    .setGroup(groupKey)
     .setGroupSummary(true)
     .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
     .setSilent(true)

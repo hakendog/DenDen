@@ -24,6 +24,15 @@
     <string name="theme_light">亮色</string>
     <string name="theme_dark">深色</string>
 
+    <string name="notification_display">通知欄顯示</string>
+    <string name="notification_display_description">選擇訊息通知在通知欄的整理方式。變更會套用到之後收到的通知，響鈴中的警報不受影響。</string>
+    <string name="notification_display_full">完整</string>
+    <string name="notification_display_full_description">依訊息頻道分組，保留每一則訊息通知</string>
+    <string name="notification_display_standard">標準</string>
+    <string name="notification_display_standard_description">所有訊息頻道合併為一組，每個頻道只保留最新一則</string>
+    <string name="notification_display_compact">精簡</string>
+    <string name="notification_display_compact_description">不分組，只保留 DenDen 最新一則訊息通知</string>
+
     <string name="alarm">警報</string>
     <string name="alarm_output">警報輸出</string>
     <string name="alarm_output_description">設定 DenDen 警報的響鈴與震動方式。</string>

@@ -9,6 +9,7 @@ import {
   isAllowedPublicPath,
   isForbiddenPublicPath,
 } from "../../scripts/check-public-repository.mjs";
+import { findUnreviewedPublicPaths } from "../../scripts/prepare-public-candidate.mjs";
 
 test("public path allowlist accepts product files and rejects private material", () => {
   for (const path of [
@@ -34,6 +35,21 @@ test("public path allowlist accepts product files and rejects private material",
 test("public path rejection normalizes Windows separators", () => {
   assert.equal(isForbiddenPublicPath("docs\\adr\\0001.md"), true);
   assert.equal(isAllowedPublicPath("..\\README.md"), false);
+});
+
+test("release preflight catches tracked and untracked public candidates missing from the manifest", () => {
+  assert.deepEqual(findUnreviewedPublicPaths(
+    ["README.md"],
+    [
+      "README.md",
+      "app/src/main/java/com/tensal/denden/NewFeature.kt",
+      "app/src/test/java/com/tensal/denden/NewFeatureTest.kt",
+      "docs/adr/private.md",
+    ],
+  ), [
+    "app/src/main/java/com/tensal/denden/NewFeature.kt",
+    "app/src/test/java/com/tensal/denden/NewFeatureTest.kt",
+  ]);
 });
 
 test("public history check detects a forbidden path deleted from the current tree", async () => {

@@ -24,6 +24,15 @@
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
 
+    <string name="notification_display">Notification shade display</string>
+    <string name="notification_display_description">Choose how message notifications are organized in the notification shade. Changes apply to future notifications; active alarms are unaffected.</string>
+    <string name="notification_display_full">Full</string>
+    <string name="notification_display_full_description">Group by message channel and keep every message notification</string>
+    <string name="notification_display_standard">Standard</string>
+    <string name="notification_display_standard_description">Combine all message channels into one group and keep only the latest notification from each channel</string>
+    <string name="notification_display_compact">Compact</string>
+    <string name="notification_display_compact_description">Do not group; keep only DenDen’s latest message notification</string>
+
     <string name="alarm">Alarm</string>
     <string name="alarm_output">Alarm output</string>
     <string name="alarm_output_description">Choose how DenDen alarms use sound and vibration.</string>
