@@ -8,6 +8,8 @@
 
 <p align="center"><strong>English</strong> · <a href="README.zh-TW.md">繁體中文</a></p>
 
+<p align="center"><a href="https://denden.tens.al">Official website</a></p>
+
 ## What is DenDen?
 
 DenDen is an Android notification system. Your computer, AI assistant, and phone automations can use it to notify you when something important happens.

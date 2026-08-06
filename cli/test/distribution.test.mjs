@@ -149,12 +149,15 @@ test("public license, identity, version, and security metadata stay aligned", as
   assert.match(android, /versionName = "1\.0\.3"/);
 
   const workflow = await readFile(join(root, ".github/workflows/ci.yml"), "utf8");
-  assert.match(workflow, /api-level: \[26, 35\]/);
+  assert.match(workflow, /system-images;android-26;google_apis;x86_64/);
+  assert.match(workflow, /system-images;android-35;google_apis;x86_64/);
 
   const readme = await readFile(join(root, "README.zh-TW.md"), "utf8");
   const readmeEnglish = await readFile(join(root, "README.md"), "utf8");
   assert.match(readme, /Copyright 2026 hakendog/);
   assert.match(readmeEnglish, /Copyright 2026 hakendog/);
+  assert.match(readme, /https:\/\/denden\.tens\.al/);
+  assert.match(readmeEnglish, /https:\/\/denden\.tens\.al/);
   assert.doesNotMatch(`${readme}\n${readmeEnglish}`, /Tensal/);
   const security = await readFile(join(root, "SECURITY.md"), "utf8");
   assert.match(security, /GitHub private vulnerability reporting/);
@@ -381,13 +384,17 @@ test("runtime code uses one protected user config and never reads or deletes the
 
 test("CI runs local gates and repository safety checks reject release secrets", async () => {
   const workflow = await readFile(join(root, ".github/workflows/ci.yml"), "utf8");
+  const verifyJob = workflow.slice(workflow.indexOf("  verify:"), workflow.indexOf("  android-build:"));
   const ignore = await readFile(join(root, ".gitignore"), "utf8");
   assert.match(workflow, /pull_request:/);
   assert.match(workflow, /branches: \[main\]/);
   assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /cancel-in-progress: true/);
   assert.match(workflow, /node scripts\/ci-scope\.mjs/);
-  assert.match(workflow, /needs\.scope\.outputs\.full == 'true'/);
+  assert.match(workflow, /types: \[opened, synchronize, reopened, ready_for_review, converted_to_draft\]/);
+  assert.match(workflow, /DENDEN_PR_DRAFT: \$\{\{ github\.event\.pull_request\.draft \|\| false \}\}/);
+  assert.match(workflow, /needs\.scope\.outputs\.cli == 'true' && needs\.scope\.outputs\.heavy == 'true'/);
+  assert.match(workflow, /needs\.scope\.outputs\.device == 'true' && needs\.scope\.outputs\.heavy == 'true'/);
   assert.match(workflow, /fetch-depth: 0/);
   assert.doesNotMatch(workflow, /branches:.*\bdev\b/);
   assert.match(workflow, /npm test/);
@@ -395,11 +402,18 @@ test("CI runs local gates and repository safety checks reject release secrets", 
   assert.match(workflow, /github\.repository == 'hakendog\/DenDen'[\s\S]*npm run verify:public/);
   assert.match(workflow, /os: \[windows-latest, macos-latest\]/);
   assert.match(workflow, /runs-on: ubuntu-latest/);
-  assert.match(workflow, /\.\/gradlew test assembleDebug lint --no-daemon/);
+  assert.match(workflow, /\.\/gradlew testDebugUnitTest assembleDebug assembleDebugAndroidTest lintDebug --build-cache --no-daemon/);
   assert.match(workflow, /npm run verify:apk/);
+  assert.doesNotMatch(verifyJob, /setup-java|gradlew|connectedDebugAndroidTest/);
+  assert.match(workflow, /android-build:[\s\S]*needs: \[scope, verify\][\s\S]*testDebugUnitTest/);
+  assert.match(workflow, /android-smoke:[\s\S]*needs: \[scope, verify\][\s\S]*connectedDebugAndroidTest/);
   const actionRefs = [...workflow.matchAll(/uses: actions\/(?:checkout|setup-node|setup-java)@(\S+)/g)].map((match) => match[1]);
   assert.equal(actionRefs.length >= 3 && actionRefs.every((ref) => /^[0-9a-f]{40}$/.test(ref)), true);
   assert.match(workflow, /connectedDebugAndroidTest/);
+  assert.match(workflow, /android focused device validation \(API 26\)/);
+  assert.match(workflow, /android full compatibility \(API 35, shard/);
+  assert.match(workflow, /android\.testInstrumentationRunnerArguments\.numShards=2/);
+  assert.match(workflow, /android\.testInstrumentationRunnerArguments\.shardIndex=/);
   assert.doesNotMatch(workflow, /assembleRelease|DENDEN_RELEASE_/);
   assert.match(ignore, /^\.signing\/$/m);
   assert.equal(isForbiddenRepositoryPath(".signing/release.jks"), true);

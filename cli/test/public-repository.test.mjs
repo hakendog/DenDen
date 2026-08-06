@@ -60,18 +60,21 @@ test("public history check detects a forbidden path deleted from the current tre
   ];
   try {
     execFileSync("git", ["init", "-b", "main"], { cwd: repository });
-    for (const path of [...required, ".agents/private.md"]) {
+    for (const path of [...required, ".agents/private.md", "docs/en/retired.md"]) {
       await mkdir(dirname(join(repository, path)), { recursive: true });
       await writeFile(join(repository, path), "fixture\n");
     }
+    await writeFile(join(repository, "docs/en/retired.md"), `AIza${"A".repeat(35)}\n`);
     execFileSync("git", ["add", "."], { cwd: repository });
     execFileSync("git", ["-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "root"], { cwd: repository });
     await rm(join(repository, ".agents", "private.md"));
+    await rm(join(repository, "docs", "en", "retired.md"));
     execFileSync("git", ["add", "-u"], { cwd: repository });
     execFileSync("git", ["-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "remove private path"], { cwd: repository });
 
     const failures = inspectPublicRepository(2, repository);
     assert(failures.some((failure) => failure.includes(".agents/private.md: 歷史含非公開路徑")));
+    assert(failures.some((failure) => failure.includes("docs/en/retired.md: 歷史物件疑似 Google API key")));
   } finally {
     await rm(repository, { recursive: true, force: true });
   }
