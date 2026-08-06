@@ -31,6 +31,7 @@ const exactPaths = new Set([
   "scripts/check-repository.mjs",
   "scripts/install-debug.ps1",
   "scripts/sync-denden-skill.mjs",
+  "scripts/verify-change.mjs",
   "settings.gradle.kts",
 ]);
 
@@ -79,6 +80,9 @@ const forbiddenPatterns = [
   /\.(?:jks|keystore|p12|pfx|pem|key)$/i,
 ];
 
+const maxBlobBytes = 5 * 1024 * 1024;
+const maxBatchBytes = 32 * 1024 * 1024;
+
 function normalizePath(value) {
   return value.replaceAll("\\", "/").replace(/^\.\//, "");
 }
@@ -113,19 +117,77 @@ function parseExpectedCommits(argv) {
   return value;
 }
 
-function inspectBlob(oid, path, failures, cwd) {
-  const type = git(["cat-file", "-t", oid], cwd).trim();
-  if (type !== "blob") return;
-  const size = Number(git(["cat-file", "-s", oid], cwd).trim());
-  if (size > 5 * 1024 * 1024) {
-    failures.push(`${path}: blob 超過 5 MiB，需人工審核`);
-    return;
+function inspectBlobBatch(entries, failures, cwd) {
+  if (!entries.length) return;
+  const input = `${entries.map(({ oid }) => oid).join("\n")}\n`;
+  const expectedBytes = entries.reduce((sum, { size }) => sum + size, 0);
+  const output = execFileSync("git", ["cat-file", "--batch"], {
+    cwd,
+    input: Buffer.from(input, "utf8"),
+    maxBuffer: expectedBytes + entries.length * 128 + 1024,
+  });
+  let offset = 0;
+  for (const entry of entries) {
+    const headerEnd = output.indexOf(10, offset);
+    if (headerEnd === -1) throw new Error(`無法解析 blob 批次輸出：${entry.oid}`);
+    const header = output.subarray(offset, headerEnd).toString("utf8");
+    const match = /^([0-9a-f]+) blob (\d+)$/.exec(header);
+    if (!match || match[1] !== entry.oid || Number(match[2]) !== entry.size) {
+      throw new Error(`blob 批次輸出不符：${entry.oid}`);
+    }
+    const contentStart = headerEnd + 1;
+    const contentEnd = contentStart + entry.size;
+    if (contentEnd >= output.length || output[contentEnd] !== 10) {
+      throw new Error(`blob 批次內容不完整：${entry.oid}`);
+    }
+    const bytes = output.subarray(contentStart, contentEnd);
+    if (!bytes.includes(0)) {
+      for (const label of findForbiddenRepositoryContent(bytes.toString("utf8"))) {
+        failures.push(`${entry.path}: 歷史物件疑似 ${label}`);
+      }
+    }
+    offset = contentEnd + 1;
   }
-  const bytes = execFileSync("git", ["cat-file", "blob", oid], { cwd, encoding: "buffer", maxBuffer: 6 * 1024 * 1024 });
-  if (bytes.includes(0)) return;
-  for (const label of findForbiddenRepositoryContent(bytes.toString("utf8"))) {
-    failures.push(`${path}: 歷史物件疑似 ${label}`);
+}
+
+function inspectHistoricalBlobs(objectLines, failures, cwd) {
+  const objects = objectLines.map((line) => {
+    const separator = line.indexOf(" ");
+    return {
+      oid: separator === -1 ? line : line.slice(0, separator),
+      path: separator === -1 ? line : line.slice(separator + 1),
+    };
+  });
+  if (!objects.length) return;
+
+  const metadata = git(
+    ["cat-file", "--batch-check=%(objectname) %(objecttype) %(objectsize)"],
+    cwd,
+    { input: `${objects.map(({ oid }) => oid).join("\n")}\n` },
+  ).trim().split(/\r?\n/);
+  if (metadata.length !== objects.length) throw new Error("物件批次中繼資料數量不符");
+
+  let batch = [];
+  let batchBytes = 0;
+  const flush = () => {
+    inspectBlobBatch(batch, failures, cwd);
+    batch = [];
+    batchBytes = 0;
+  };
+  for (let index = 0; index < objects.length; index += 1) {
+    const match = /^([0-9a-f]+) (\S+) (\d+)$/.exec(metadata[index]);
+    if (!match || match[1] !== objects[index].oid) throw new Error(`無法解析物件中繼資料：${objects[index].oid}`);
+    if (match[2] !== "blob") continue;
+    const size = Number(match[3]);
+    if (size > maxBlobBytes) {
+      failures.push(`${objects[index].path}: blob 超過 5 MiB，需人工審核`);
+      continue;
+    }
+    if (batch.length && batchBytes + size > maxBatchBytes) flush();
+    batch.push({ ...objects[index], size });
+    batchBytes += size;
   }
+  flush();
 }
 
 export function inspectPublicRepository(expectedCommits = null, cwd = process.cwd()) {
@@ -149,11 +211,12 @@ export function inspectPublicRepository(expectedCommits = null, cwd = process.cw
   if (expectedCommits != null && commits.length !== expectedCommits) {
     failures.push(`公開歷史應有 ${expectedCommits} 個 commit，目前為 ${commits.length}`);
   }
-  for (const commit of commits) {
-    const historicalPaths = git(["ls-tree", "-r", "--name-only", "-z", commit], cwd).split("\0").filter(Boolean);
-    for (const path of historicalPaths) {
-      if (!isAllowedPublicPath(path)) failures.push(`${path}: 歷史含非公開路徑`);
-    }
+  const historicalPaths = new Set(
+    git(["log", "--all", "--root", "-m", "--format=", "--name-only", "--no-renames", "-z"], cwd)
+      .split("\0").filter(Boolean),
+  );
+  for (const path of historicalPaths) {
+    if (!isAllowedPublicPath(path)) failures.push(`${path}: 歷史含非公開路徑`);
   }
 
   const refs = git(["for-each-ref", "--format=%(refname)", "refs/heads", "refs/remotes", "refs/tags"], cwd)
@@ -165,18 +228,8 @@ export function inspectPublicRepository(expectedCommits = null, cwd = process.cw
     }
   }
 
-  const seenBlobs = new Set();
   const objects = git(["rev-list", "--objects", "--all"], cwd).trim().split(/\r?\n/).filter(Boolean);
-  for (const line of objects) {
-    const separator = line.indexOf(" ");
-    if (separator === -1) continue;
-    const oid = line.slice(0, separator);
-    const path = line.slice(separator + 1);
-    if (!seenBlobs.has(oid)) {
-      seenBlobs.add(oid);
-      inspectBlob(oid, path, failures, cwd);
-    }
-  }
+  inspectHistoricalBlobs(objects, failures, cwd);
   return failures;
 }
 

@@ -8,6 +8,8 @@
 
 <p align="center"><a href="README.md">English</a> · <strong>繁體中文</strong></p>
 
+<p align="center"><a href="https://denden.tens.al">官方網站</a></p>
+
 ## DenDen 是什麼
 
 DenDen 是一套 Android 通知系統，讓電腦、AI 助理與手機自動化在重要事項發生時通知你。
